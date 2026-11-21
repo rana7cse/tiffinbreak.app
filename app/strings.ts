@@ -14,6 +14,10 @@ export const strings = {
     name: "টিফিনব্রেক",
   },
 
+  pwa: {
+    description: "স্কুলের দিনের গল্প লিখে রাখার জায়গা",
+  },
+
   /** Document titles, shown as "<page> | টিফিনব্রেক" via `pageTitle`. */
   meta: {
     pageTitle: (page: string) => `${page} | টিফিনব্রেক`,

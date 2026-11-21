@@ -14,7 +14,16 @@ export default defineConfig(async () => {
       reactRouter(),
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations } },
+        miniflare: {
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            // Fake auth config for tests; never real credentials.
+            BETTER_AUTH_SECRET: "test-secret-at-least-32-characters-long",
+            BETTER_AUTH_URL: "http://example.com",
+            GOOGLE_CLIENT_ID: "test-google-client-id",
+            GOOGLE_CLIENT_SECRET: "test-google-client-secret",
+          },
+        },
       }),
     ],
     resolve: { tsconfigPaths: true },
