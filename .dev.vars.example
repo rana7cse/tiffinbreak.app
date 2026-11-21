@@ -6,3 +6,6 @@ BETTER_AUTH_URL=http://localhost:5173
 # Google Cloud Console > APIs & Services > Credentials (see README)
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
+# Meta for Developers > your app > Settings > Basic (see README)
+FACEBOOK_CLIENT_ID=your-meta-app-id
+FACEBOOK_CLIENT_SECRET=your-meta-app-secret
