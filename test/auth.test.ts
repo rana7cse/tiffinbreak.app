@@ -136,3 +136,90 @@ describe("/api/auth", () => {
     expect(body.user.name).toBe("Rafi Ahmed");
   });
 });
+
+describe("Facebook sign-in", () => {
+  function stubFacebook(profile: Record<string, unknown>) {
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal(
+      "fetch",
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = new Request(input, init).url;
+        if (
+          url.startsWith("https://graph.facebook.com/v24.0/oauth/access_token")
+        ) {
+          return Response.json({
+            access_token: "fake-fb-token",
+            token_type: "bearer",
+            expires_in: 3600,
+          });
+        }
+        if (url.startsWith("https://graph.facebook.com/debug_token")) {
+          return Response.json({
+            data: {
+              is_valid: true,
+              app_id: "test-facebook-client-id",
+              user_id: profile.id,
+            },
+          });
+        }
+        if (url.startsWith("https://graph.facebook.com/me")) {
+          return Response.json(profile);
+        }
+        return realFetch(input, init);
+      },
+    );
+  }
+
+  function startFacebookSignIn() {
+    return exports.default.fetch(`${ORIGIN}/api/auth/sign-in/social`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN },
+      body: JSON.stringify({ provider: "facebook", callbackURL: "/" }),
+    });
+  }
+
+  it("POST /api/auth/sign-in/social sends the browser to Facebook", async () => {
+    const res = await startFacebookSignIn();
+
+    expect(res.status).toBe(200);
+    const target = new URL(((await res.json()) as { url: string }).url);
+    expect(target.host).toBe("www.facebook.com");
+    expect(target.searchParams.get("client_id")).toBe(
+      "test-facebook-client-id",
+    );
+    expect(target.searchParams.get("redirect_uri")).toBe(
+      `${ORIGIN}/api/auth/callback/facebook`,
+    );
+    expect(target.searchParams.get("scope")).toContain("public_profile");
+  });
+
+  it("first Facebook sign-in creates one Writer with Facebook name and avatar", async () => {
+    stubFacebook({
+      id: "fb-123",
+      name: "Nusrat Jahan",
+      email: "nusrat@example.com",
+      picture: { data: { url: "https://platform-lookaside.fbsbx.com/n.jpg" } },
+    });
+    const before = (await count("user")) ?? 0;
+    const start = await startFacebookSignIn();
+    const { url } = (await start.json()) as { url: string };
+    const state = new URL(url).searchParams.get("state");
+
+    const res = await exports.default.fetch(
+      `${ORIGIN}/api/auth/callback/facebook?code=fake-code&state=${state}`,
+      { headers: { cookie: cookieHeader(start) }, redirect: "manual" },
+    );
+
+    expect(res.status).toBe(302);
+    expect(res.headers.getSetCookie().join(";")).toContain("session_token");
+    expect(await count("user")).toBe(before + 1);
+    expect(
+      await env.DB.prepare(
+        "SELECT name, image FROM user WHERE email = 'nusrat@example.com'",
+      ).first(),
+    ).toEqual({
+      name: "Nusrat Jahan",
+      image: "https://platform-lookaside.fbsbx.com/n.jpg",
+    });
+  });
+});

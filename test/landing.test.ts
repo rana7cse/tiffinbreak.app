@@ -33,6 +33,15 @@ describe("landing page", () => {
 
     expect(html).toContain('<div class="tb-app">');
   });
+
+  it("has a Facebook form posting to /login/facebook", async () => {
+    const { html } = await getHtml("/");
+
+    expect(html).toMatch(/<form [^>]*action="\/login\/facebook"/);
+    expect(html).toMatch(/<form [^>]*method="post"/);
+    expect(html).toMatch(/<input [^>]*name="returnTo"/);
+    expect(html).toContain('value="/feed"');
+  });
 });
 
 describe("GET /login", () => {
