@@ -1,6 +1,6 @@
 /**
  * Wrangler config: https://developers.cloudflare.com/workers/wrangler/configuration/
- * Bindings (D1, R2, KV) are added by later tickets.
+ * Bindings (R2, KV) are added by later tickets.
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -10,5 +10,16 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "tiffinbreak",
+			// Placeholder id: enough for local dev and tests. #13 creates the
+			// production database and replaces this with its real id.
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			// SQL written by drizzle-kit (`npm run db:generate`).
+			"migrations_dir": "migrations"
+		}
+	]
 }
