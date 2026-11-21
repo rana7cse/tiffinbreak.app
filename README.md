@@ -76,6 +76,56 @@ export async function loader({ context }: Route.LoaderArgs) {
 `/health` reports `{"status":"ok","db":"ok"}`, or `503` with `"db":"error"`
 when the database query fails (for example, migrations not applied).
 
+## Auth (Better Auth + Google)
+
+Login is [Better Auth](https://better-auth.com) with the Drizzle adapter on D1
+and cookie sessions. Google is the only provider so far (Facebook comes later).
+The Worker serves its endpoints under `/api/auth/*` (handled in
+`workers/app.ts`, before React Router). The auth instance is built per request
+by `getAuth(env)` in [`app/auth.ts`](app/auth.ts). A Writer is a row in the
+`user` table, which Better Auth requires to be named that.
+
+### Environment variables
+
+| Variable | Meaning |
+| --- | --- |
+| `BETTER_AUTH_SECRET` | Random string, 32+ chars (`openssl rand -base64 32`) |
+| `BETTER_AUTH_URL` | Origin the app is served from, no trailing slash |
+| `GOOGLE_CLIENT_ID` | From the Google OAuth client |
+| `GOOGLE_CLIENT_SECRET` | From the Google OAuth client |
+
+They are declared under `secrets` in `wrangler.jsonc`, so `wrangler types`
+types them on `Env`. Never commit real values.
+
+### Local setup
+
+1. Create the Google OAuth client (below).
+2. `cp .dev.vars.example .dev.vars` and fill it in (`.dev.vars` is git-ignored).
+3. `npm run db:migrate:local`, then `npm run dev` and open
+   `http://localhost:5173/api/auth/ok` (should return `{"ok":true}`).
+
+### Create the Google OAuth client
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials),
+   pick or create a project and configure the OAuth consent screen.
+2. Credentials > Create credentials > OAuth client ID > Web application.
+3. Add these **Authorised redirect URIs** (`<origin>/api/auth/callback/google`):
+   - `http://localhost:5173/api/auth/callback/google`
+   - `https://tiffinbreak.app/api/auth/callback/google`
+4. Copy the client ID and secret into `.dev.vars` (local) and production
+   secrets (below).
+
+### Production secrets
+
+```sh
+npx wrangler secret put BETTER_AUTH_SECRET
+npx wrangler secret put BETTER_AUTH_URL        # https://tiffinbreak.app
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+```
+
+Run `npm run db:migrate:remote` before deploying so the auth tables exist.
+
 ## Tests
 
 Tests run inside the real Workers runtime using
