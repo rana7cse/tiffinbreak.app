@@ -30,6 +30,7 @@ export const strings = {
     profile: "প্রোফাইল",
     myProfile: "আমার প্রোফাইল",
     login: "লগইন",
+    logout: "লগআউট",
     backToFeed: "ফিডে ফিরে যাও",
   },
 
@@ -92,11 +93,14 @@ export const strings = {
 
   login: {
     title: "লগইন",
-    comingSoon: "লগইন শিগগিরই আসছে। একটু অপেক্ষা করো।",
+    lead: "গল্প লিখতে আর পড়তে আগে লগইন করে নাও।",
+    withGoogle: "গুগল দিয়ে লগইন করো",
   },
 
   feed: {
     title: "হোম ফিড",
+    greeting: (name: string) => `স্বাগতম, ${name}!`,
+    placeholder: "গল্পগুলো শিগগিরই এখানে আসছে।",
     myDiary: "আমার ডায়েরি",
     newStories: "নতুন গল্প",
   },

@@ -45,10 +45,10 @@ describe("landing page", () => {
 });
 
 describe("GET /login", () => {
-  it("returns 200 with the placeholder message", async () => {
+  it("returns 200 with the Google sign-in form", async () => {
     const { status, html } = await getHtml("/login");
 
     expect(status).toBe(200);
-    expect(html).toContain("লগইন শিগগিরই আসছে");
+    expect(html).toContain('action="/login/google"');
   });
 });
