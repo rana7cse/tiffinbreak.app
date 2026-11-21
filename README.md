@@ -50,7 +50,7 @@ import { exports } from "cloudflare:workers";
 const res = await exports.default.fetch("http://example.com/health");
 ```
 
-Tests live in `test/`.
+Tests live in `test/`. CI (`.github/workflows/ci.yml`) runs lint, typecheck and tests on every pull request and push to `main`.
 
 ## Project layout
 
