@@ -224,13 +224,16 @@ export default function Home() {
         <p className="tb-board__text" style={{ margin: "10px 0 22px" }}>
           {t.ctaText}
         </p>
-        <a
-          className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
-          href="/login"
-        >
-          <PenIcon size={20} color="#FFFFFF" />
-          {t.ctaButton}
-        </a>
+        <form method="post" action="/login/google">
+          <input type="hidden" name="returnTo" value="/feed" />
+          <button
+            className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
+            type="submit"
+          >
+            <PenIcon size={20} color="#FFFFFF" />
+            {t.ctaButton}
+          </button>
+        </form>
       </section>
 
       <footer className="tb-footer">
