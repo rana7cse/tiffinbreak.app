@@ -11,4 +11,7 @@ export default defineConfig({
     cloudflareTest({ wrangler: { configPath: "./wrangler.jsonc" } }),
   ],
   resolve: { tsconfigPaths: true },
+  // Process CSS like the real build so `?url` imports resolve to an href
+  // (Vitest stubs CSS to "" by default).
+  test: { css: true },
 });

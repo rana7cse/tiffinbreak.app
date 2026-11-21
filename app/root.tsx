@@ -8,7 +8,25 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import themeHref from "./styles/theme.css?url";
 
+export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/logo-favicon.svg", type: "image/svg+xml" },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  {
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
+  },
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700&family=Baloo+Da+2:wght@500;600;700&display=swap",
+  },
+  { rel: "stylesheet", href: themeHref },
+];
+
+// Every page (including error pages) renders inside the .tb-app mobile
+// column; theme.css caps it at --tb-max and centres it on wider screens.
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn">
@@ -19,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <div className="tb-app">{children}</div>
         <ScrollRestoration />
         <Scripts />
       </body>
