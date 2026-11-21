@@ -34,7 +34,8 @@ npm run dev        # http://localhost:5173
 | `npm run lint` | Lint and format check with Biome (`npm run format` to fix) |
 | `npm run build` | Production build into `build/` |
 | `npm run preview` | Build, then serve the production build locally |
-| `npm run deploy` | Build and deploy with Wrangler (needs a Cloudflare login) |
+| `npm run deploy` | Build and deploy with Wrangler, no migrations (needs a Cloudflare login) |
+| `npm run deploy:prod` | Migrate the production D1, then `wrangler deploy` (the Workers Builds deploy command; run after `npm run build`) |
 | `npm run db:generate` | Generate a SQL migration from the Drizzle schema |
 | `npm run db:migrate:local` | Apply pending migrations to the local D1 database |
 | `npm run db:migrate:remote` | Apply pending migrations to the production D1 database |
@@ -141,16 +142,96 @@ Live, which requires:
 
 ### Production secrets
 
-```sh
-npx wrangler secret put BETTER_AUTH_SECRET
-npx wrangler secret put BETTER_AUTH_URL        # https://tiffinbreak.app
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-npx wrangler secret put FACEBOOK_CLIENT_ID
-npx wrangler secret put FACEBOOK_CLIENT_SECRET
-```
+Set with `wrangler secret put`; see
+[Production setup](#production-setup-one-time-by-a-human) step 4. Migrations
+run on deploy via `npm run deploy:prod`.
 
-Run `npm run db:migrate:remote` before deploying so the auth tables exist.
+## Production setup (one-time, by a human)
+
+Production runs on Cloudflare Workers at `https://tiffinbreak.app`. Workers
+Builds deploys `main` to production and gives every pull request a preview URL.
+Do these once, in order.
+
+1. **Resources (already created, APAC).** The IDs are in `wrangler.jsonc`. To
+   recreate them in another account, run these and paste the new IDs in:
+
+   ```sh
+   npx wrangler d1 create tiffinbreak --location apac   # database_id
+   npx wrangler kv namespace create tiffinbreak-cache   # id of the CACHE binding
+   ```
+
+2. **R2 (not created yet).** Dashboard > Storage & databases > R2 object
+   storage > enable R2 (needs a payment method; the free tier still applies).
+   Create a bucket named `tiffinbreak-covers`. No binding yet: the cover-photo
+   ticket adds `r2_buckets` to `wrangler.jsonc`.
+
+3. **Connect the repo (Workers Builds).** Dashboard > Workers & Pages > the
+   `tiffinbreak` Worker > Settings > Builds > Connect (if the Worker does not
+   exist yet: Create application > Import a repository). Pick the GitHub repo
+   `rana7cse/tiffinbreak.app`, then set:
+
+   | Setting | Value |
+   | --- | --- |
+   | Production branch | `main` |
+   | Build command | `npm run build` |
+   | Deploy command | `npm run deploy:prod` |
+   | Non-production branch builds | enabled |
+   | Non-production deploy command | `npx wrangler versions upload` |
+   | Build variable `NODE_VERSION` | `24` (only if the build picks an older Node; `.nvmrc` is also read) |
+
+   `npm run deploy:prod` applies pending D1 migrations to production
+   (`db:migrate:remote`), then runs `wrangler deploy`. `npm run build` writes a
+   redirect to `build/server/wrangler.json`, which Wrangler picks up, so build
+   and deploy must run in that order in the same checkout.
+
+   Previews (`wrangler versions upload`) do **not** migrate and use the
+   **production** D1 and KV, so a PR that changes the schema can break its own
+   preview until it is merged. A separate preview database is out of scope.
+
+   The build token needs D1 edit rights for the remote migration. Under
+   Settings > Builds > API token, check the token Workers Builds uses. If it
+   lacks D1, create one (My Profile > API Tokens > Create Token > Custom) with
+   Account > Workers Scripts > Edit, Account > D1 > Edit and Account >
+   Workers KV Storage > Edit, then select it under Builds > API token.
+
+4. **Secrets.** `wrangler.jsonc` lists them as required, so deploys fail until
+   all are set. Run `npx wrangler login` first, then:
+
+   ```sh
+   openssl rand -base64 32                        # value for BETTER_AUTH_SECRET
+   npx wrangler secret put BETTER_AUTH_SECRET
+   npx wrangler secret put BETTER_AUTH_URL        # https://tiffinbreak.app
+   npx wrangler secret put GOOGLE_CLIENT_ID
+   npx wrangler secret put GOOGLE_CLIENT_SECRET
+   npx wrangler secret put FACEBOOK_CLIENT_ID
+   npx wrangler secret put FACEBOOK_CLIENT_SECRET
+   ```
+
+   Where the Google and Meta values come from: see
+   [Create the Google OAuth client](#create-the-google-oauth-client) and
+   [Create the Meta app](#create-the-meta-app-facebook-login).
+
+5. **Custom domain.** The zone `tiffinbreak.app` must be in this Cloudflare
+   account (Dashboard > Domains > Onboard a domain, then point the registrar's
+   nameservers at Cloudflare). The `routes` entry in `wrangler.jsonc` attaches
+   `tiffinbreak.app` as a Custom Domain on the next deploy, creating the DNS
+   record and certificate. Check it under the Worker > Settings > Domains &
+   Routes.
+
+6. **OAuth redirect URIs.** Add the production URIs
+   (`https://tiffinbreak.app/api/auth/callback/google` and `.../facebook`) to
+   the Google client and the Meta app, as listed in the two sections linked in
+   step 4.
+
+7. **Deploy and verify.** Push to `main` (or retry the build under the
+   Worker's Deployments > Builds), then:
+
+   ```sh
+   curl https://tiffinbreak.app/health   # {"status":"ok","db":"ok"}
+   ```
+
+   Open a PR to confirm it gets a preview URL (shown in the Worker's
+   Deployments tab).
 
 ## Tests
 

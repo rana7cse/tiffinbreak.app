@@ -1,6 +1,6 @@
 /**
  * Wrangler config: https://developers.cloudflare.com/workers/wrangler/configuration/
- * Bindings (R2, KV) are added by later tickets.
+ * The R2 binding (bucket tiffinbreak-covers) is added by the cover-photo ticket.
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -23,15 +23,25 @@
 			"FACEBOOK_CLIENT_SECRET"
 		]
 	},
+	// Production domain. Attached as a Custom Domain on deploy; the zone must be
+	// in the same Cloudflare account. workers.dev and preview URLs stay on so
+	// pull requests get previews.
+	"routes": [{ "pattern": "tiffinbreak.app", "custom_domain": true }],
+	"workers_dev": true,
+	"preview_urls": true,
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "tiffinbreak",
-			// Placeholder id: enough for local dev and tests. #13 creates the
-			// production database and replaces this with its real id.
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "963f4743-c7d8-4973-a327-ce48b64ebc70",
 			// SQL written by drizzle-kit (`npm run db:generate`).
 			"migrations_dir": "migrations"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "16b2e8cb837145d0b646bd79325f6d07"
 		}
 	]
 }
