@@ -95,6 +95,7 @@ export const strings = {
     title: "লগইন",
     lead: "গল্প লিখতে আর পড়তে আগে লগইন করে নাও।",
     withGoogle: "গুগল দিয়ে লগইন করো",
+    withFacebook: "ফেসবুক দিয়ে লগইন করো",
   },
 
   feed: {
