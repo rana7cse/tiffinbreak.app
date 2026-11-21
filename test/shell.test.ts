@@ -22,7 +22,7 @@ describe("theme and mobile shell", () => {
   it("renders the page inside the tb-app mobile column", async () => {
     const html = await getHtml("/");
 
-    expect(html).toMatch(/<div class="tb-app">[\s\S]*টিফিনব্রেক/);
+    expect(html).toMatch(/<div class="tb-app[ "][\s\S]*টিফিনব্রেক/);
   });
 
   it("renders error pages inside the tb-app mobile column too", async () => {
