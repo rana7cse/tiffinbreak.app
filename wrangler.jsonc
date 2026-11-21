@@ -11,6 +11,16 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	// Auth config, read from the Worker env. Locally they come from .dev.vars
+	// (copy .dev.vars.example); in production use `wrangler secret put`.
+	"secrets": {
+		"required": [
+			"BETTER_AUTH_SECRET",
+			"BETTER_AUTH_URL",
+			"GOOGLE_CLIENT_ID",
+			"GOOGLE_CLIENT_SECRET"
+		]
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",
