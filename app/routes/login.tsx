@@ -1,10 +1,26 @@
 import { redirect } from "react-router";
+import { FacebookIcon } from "~/components/landing-art";
 import { getWriter } from "~/lib/require-writer";
 import { sanitizeReturnTo } from "~/lib/return-to";
 import { strings } from "~/strings";
 import type { Route } from "./+types/login";
 
 const t = strings.login;
+
+const providers = [
+  {
+    id: "google",
+    label: t.withGoogle,
+    className: "tb-btn--primary",
+    icon: null,
+  },
+  {
+    id: "facebook",
+    label: t.withFacebook,
+    className: "tb-btn--facebook",
+    icon: <FacebookIcon />,
+  },
+];
 
 export function meta(_: Route.MetaArgs) {
   return [{ title: strings.meta.pageTitle(t.title) }];
@@ -24,15 +40,25 @@ export default function Login({ loaderData }: Route.ComponentProps) {
     <main className="tb-section">
       <h1 className="tb-h2">{t.title}</h1>
       <p className="tb-lead">{t.lead}</p>
-      <form method="post" action="/login/google" style={{ marginTop: 22 }}>
-        <input type="hidden" name="returnTo" value={loaderData.returnTo} />
-        <button
-          className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block"
-          type="submit"
-        >
-          {t.withGoogle}
-        </button>
-      </form>
+      <div className="tb-stack" style={{ gap: 12, marginTop: 22 }}>
+        {providers.map((p) => (
+          <form
+            key={p.id}
+            method="post"
+            action={`/login/${p.id}`}
+            style={{ display: "contents" }}
+          >
+            <input type="hidden" name="returnTo" value={loaderData.returnTo} />
+            <button
+              className={`tb-btn ${p.className} tb-btn--lg tb-btn--block`}
+              type="submit"
+            >
+              {p.icon}
+              {p.label}
+            </button>
+          </form>
+        ))}
+      </div>
     </main>
   );
 }

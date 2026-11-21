@@ -72,6 +72,30 @@ describe("returnTo", () => {
   });
 });
 
+describe("login page providers", () => {
+  const formFor = (html: string, provider: string) =>
+    html.match(
+      new RegExp(`<form[^>]*action="/login/${provider}"[^>]*>.*?</form>`, "s"),
+    )?.[0];
+
+  it("offers Google and Facebook with the same returnTo", async () => {
+    const html = await (await get("/login?returnTo=%2Ffeed%3Fx%3D1")).text();
+    for (const provider of ["google", "facebook"]) {
+      const form = formFor(html, provider);
+      expect(form, provider).toBeDefined();
+      expect(form).toContain('method="post"');
+      expect(form).toMatch(/name="returnTo"[^>]*value="\/feed\?x=1"/);
+    }
+  });
+
+  it("gives the Facebook form /feed for an unsafe returnTo", async () => {
+    const html = await (await get("/login?returnTo=//evil.com")).text();
+    expect(formFor(html, "facebook")).toMatch(
+      /name="returnTo"[^>]*value="\/feed"/,
+    );
+  });
+});
+
 describe("POST /login/:provider", () => {
   it("redirects to Google and sets the OAuth state cookie", async () => {
     const res = await post("/login/google", { returnTo: "/feed" });
