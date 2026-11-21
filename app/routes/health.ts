@@ -1,10 +1,27 @@
+import { cloudflareContext } from "~/context";
+import { getDb } from "~/db";
+import { appMeta } from "~/db/schema";
+import type { Route } from "./+types/health";
+
 /**
  * Liveness check. Resource route (no UI): returns JSON only.
- * Later tickets add dependency checks (e.g. D1) to this payload.
+ * `db` is "ok" when D1 answers a query against a migrated table.
  */
-export function loader() {
+export async function loader({ context }: Route.LoaderArgs) {
+  const { env } = context.get(cloudflareContext);
+  let db: "ok" | "error" = "ok";
+  try {
+    await getDb(env.DB).select().from(appMeta).limit(1);
+  } catch (error) {
+    console.error("health: D1 check failed", error);
+    db = "error";
+  }
+
   return Response.json(
-    { status: "ok" },
-    { headers: { "Cache-Control": "no-store" } },
+    { status: db === "ok" ? "ok" : "error", db },
+    {
+      status: db === "ok" ? 200 : 503,
+      headers: { "Cache-Control": "no-store" },
+    },
   );
 }
