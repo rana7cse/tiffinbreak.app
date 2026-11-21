@@ -16,6 +16,8 @@
       "!!.agents",
       "!worker-configuration.d.ts",
       "!package-lock.json",
+      "!!public",
+      "!app/styles/theme.css",
       "!wrangler.jsonc"
     ]
   },
