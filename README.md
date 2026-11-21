@@ -79,7 +79,7 @@ when the database query fails (for example, migrations not applied).
 ## Auth (Better Auth + Google)
 
 Login is [Better Auth](https://better-auth.com) with the Drizzle adapter on D1
-and cookie sessions. Google is the only provider so far (Facebook comes later).
+and cookie sessions. Google and Facebook are the providers.
 The Worker serves its endpoints under `/api/auth/*` (handled in
 `workers/app.ts`, before React Router). The auth instance is built per request
 by `getAuth(env)` in [`app/auth.ts`](app/auth.ts). A Writer is a row in the
@@ -93,6 +93,8 @@ by `getAuth(env)` in [`app/auth.ts`](app/auth.ts). A Writer is a row in the
 | `BETTER_AUTH_URL` | Origin the app is served from, no trailing slash |
 | `GOOGLE_CLIENT_ID` | From the Google OAuth client |
 | `GOOGLE_CLIENT_SECRET` | From the Google OAuth client |
+| `FACEBOOK_CLIENT_ID` | Meta app ID |
+| `FACEBOOK_CLIENT_SECRET` | Meta app secret |
 
 They are declared under `secrets` in `wrangler.jsonc`, so `wrangler types`
 types them on `Env`. Never commit real values.
@@ -115,6 +117,28 @@ types them on `Env`. Never commit real values.
 4. Copy the client ID and secret into `.dev.vars` (local) and production
    secrets (below).
 
+### Create the Meta app (Facebook login)
+
+1. At [developers.facebook.com](https://developers.facebook.com/apps) create an
+   app (use case: "Authenticate and request data from users with Facebook
+   Login") and add the **Facebook Login** product.
+2. Facebook Login > Settings > **Valid OAuth Redirect URIs**
+   (`<origin>/api/auth/callback/facebook`):
+   - `http://localhost:5173/api/auth/callback/facebook`
+   - `https://tiffinbreak.app/api/auth/callback/facebook`
+3. Settings > Basic: copy **App ID** and **App Secret** into
+   `FACEBOOK_CLIENT_ID` and `FACEBOOK_CLIENT_SECRET` (`.dev.vars` locally,
+   production secrets below). Only `email` and `public_profile` are requested.
+
+The app starts in **Development mode**: only people with a role on the app
+(admins, developers, testers) can sign in. Public use needs the app switched to
+Live, which requires:
+
+- a privacy policy URL and a data deletion URL (or instructions) in Settings > Basic;
+- Business Verification of the owning Meta business;
+- App Review for any permission beyond the defaults (`email` and
+  `public_profile` are default, so normally none).
+
 ### Production secrets
 
 ```sh
@@ -122,6 +146,8 @@ npx wrangler secret put BETTER_AUTH_SECRET
 npx wrangler secret put BETTER_AUTH_URL        # https://tiffinbreak.app
 npx wrangler secret put GOOGLE_CLIENT_ID
 npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put FACEBOOK_CLIENT_ID
+npx wrangler secret put FACEBOOK_CLIENT_SECRET
 ```
 
 Run `npm run db:migrate:remote` before deploying so the auth tables exist.

@@ -120,13 +120,20 @@ export default function Home() {
         <p className="tb-board__text tb-rise3">{t.lead}</p>
 
         <div className="tb-stack tb-rise4" style={{ gap: 12, marginTop: 22 }}>
-          <a
-            className="tb-btn tb-btn--facebook tb-btn--lg tb-btn--block tb-btn--on-board"
-            href="/login"
+          <form
+            method="post"
+            action="/login/facebook"
+            style={{ display: "contents" }}
           >
-            <FacebookIcon />
-            {t.loginToStart}
-          </a>
+            <input type="hidden" name="returnTo" value="/feed" />
+            <button
+              type="submit"
+              className="tb-btn tb-btn--facebook tb-btn--lg tb-btn--block tb-btn--on-board"
+            >
+              <FacebookIcon />
+              {t.loginToStart}
+            </button>
+          </form>
           <a
             className="tb-link"
             href="#how"

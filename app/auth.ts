@@ -5,13 +5,21 @@ import * as schema from "~/db/schema";
 
 /**
  * Social providers. Each entry maps a Better Auth provider id to the Worker
- * env vars holding its credentials. Adding Facebook (#10) is one line here,
- * plus the two env vars in wrangler.jsonc `secrets` and .dev.vars.example.
+ * env vars holding its credentials. Adding one is an entry here, plus its two
+ * env vars in wrangler.jsonc `secrets` and .dev.vars.example.
  */
 const socialProviders = {
   google: {
     clientId: "GOOGLE_CLIENT_ID",
     clientSecret: "GOOGLE_CLIENT_SECRET",
+  },
+  // Better Auth requests `email` and `public_profile` by default. That is all
+  // we need: public_profile carries the name and the picture, which the
+  // provider maps to `user.image` (`picture.data.url`). No extra scopes, so no
+  // App Review for them.
+  facebook: {
+    clientId: "FACEBOOK_CLIENT_ID",
+    clientSecret: "FACEBOOK_CLIENT_SECRET",
   },
 } as const;
 

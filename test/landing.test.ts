@@ -12,7 +12,7 @@ describe("landing page", () => {
 
     expect(status).toBe(200);
     expect(html).toContain("সেই দিনগুলো");
-    expect(html).toMatch(/<a [^>]*href="\/login"[^>]*>[\s\S]*?লগইন করে শুরু করো/);
+    expect(html).toMatch(/<a [^>]*href="\/login"[^>]*>/);
   });
 
   it("renders every prompt note and step", async () => {

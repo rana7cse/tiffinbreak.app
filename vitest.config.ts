@@ -22,6 +22,8 @@ export default defineConfig(async () => {
             BETTER_AUTH_URL: "http://example.com",
             GOOGLE_CLIENT_ID: "test-google-client-id",
             GOOGLE_CLIENT_SECRET: "test-google-client-secret",
+            FACEBOOK_CLIENT_ID: "test-facebook-client-id",
+            FACEBOOK_CLIENT_SECRET: "test-facebook-client-secret",
           },
         },
       }),
