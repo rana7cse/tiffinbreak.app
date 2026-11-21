@@ -1,0 +1,14 @@
+/**
+ * Wrangler config: https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Bindings (D1, R2, KV) are added by later tickets.
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "tiffinbreak",
+	"compatibility_date": "2026-11-19",
+	"main": "./workers/app.ts",
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true
+}
