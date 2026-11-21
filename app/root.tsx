@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -8,10 +9,13 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { THEME_COLOR } from "./lib/pwa";
 import themeHref from "./styles/theme.css?url";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo-favicon.svg", type: "image/svg+xml" },
+  { rel: "manifest", href: "/manifest.webmanifest" },
+  { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -33,6 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content={THEME_COLOR} />
         <Meta />
         <Links />
       </head>
@@ -46,6 +51,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Client only: effects never run during SSR.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const register = () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    };
+    if (document.readyState === "complete") {
+      register();
+      return;
+    }
+    window.addEventListener("load", register, { once: true });
+    return () => window.removeEventListener("load", register);
+  }, []);
+
   return <Outlet />;
 }
 
