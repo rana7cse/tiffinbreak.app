@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>টিফিনব্রেক | লোগো</title>
+<link rel="icon" href="assets/logo-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  .logo-sheet { max-width: 880px; margin: 0 auto; padding: 40px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+  .logo-tile { min-height: 300px; border-radius: 24px; border: var(--tb-border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; }
+  .logo-word { font-family: var(--tb-font-display); font-weight: 700; font-size: 46px; line-height: 1.1; }
+  .logo-latin { font-family: var(--tb-font-display); font-weight: 600; font-size: 16px; letter-spacing: 4px; }
+</style>
+</head>
+<body style="background:#fff">
+<!-- Brand sheet — reference only. Use the files in assets/ in the app. -->
+<div class="logo-sheet">
+  <section class="logo-tile" style="background:var(--tb-paper)" aria-label="মূল লোগো, হালকা ব্যাকগ্রাউন্ডে">
+    <img src="assets/logo.svg" alt="টিফিনব্রেক লোগো" width="132" height="134">
+    <div style="display:flex; flex-direction:column; align-items:center">
+      <span class="logo-word">টিফিনব্রেক</span>
+      <span class="logo-latin" style="color:var(--tb-accent)">TIFFINBREAK</span>
+    </div>
+  </section>
+
+  <section class="logo-tile" style="background:var(--tb-board); border:8px solid var(--tb-board-frame)" aria-label="মূল লোগো, গাঢ় ব্যাকগ্রাউন্ডে">
+    <img src="assets/logo-light.svg" alt="টিফিনব্রেক লোগো" width="132" height="128">
+    <div style="display:flex; flex-direction:column; align-items:center">
+      <span class="logo-word" style="color:#fff">টিফিনব্রেক</span>
+      <span class="logo-latin" style="color:var(--tb-yellow)">TIFFINBREAK</span>
+    </div>
+  </section>
+
+  <section class="logo-tile" style="background:var(--tb-paper); flex-direction:row; justify-content:space-around; min-height:200px" aria-label="অ্যাপ আইকন ও ছোট সাইজ">
+    <img src="assets/logo.svg" alt="লোগো, ৯৬ পিক্সেল" width="96" height="98">
+    <img src="assets/logo.svg" alt="লোগো, ৬৪ পিক্সেল" width="64" height="65">
+    <img src="assets/logo-icon-small.svg" alt="লোগো, ৪০ পিক্সেল" width="40" height="40">
+    <img src="assets/logo-favicon.svg" alt="লোগো, ২৪ পিক্সেল (ফেভিকন)" width="24" height="24">
+  </section>
+
+  <section class="logo-tile" style="background:#fff; align-items:flex-start; min-height:200px" aria-label="এক লাইনের লোগো">
+    <div style="display:flex; align-items:center; gap:12px">
+      <img src="assets/logo.svg" alt="" width="52" height="53">
+      <span class="tb-display" style="font-size:34px; line-height:1">টিফিনব্রেক</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px">
+      <img src="assets/logo.svg" alt="" width="52" height="53">
+      <span class="tb-display" style="font-size:32px; line-height:1">tiffin<span style="color:var(--tb-accent)">break</span></span>
+    </div>
+  </section>
+</div>
+</body>
+</html>

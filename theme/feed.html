@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>টিফিনব্রেক | হোম ফিড</title>
+<link rel="icon" href="assets/logo-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<!-- Page: Feed  →  React: <FeedPage /> -->
+<div class="tb-app tb-app--with-nav">
+
+  <!-- <AppHeader /> -->
+  <header class="tb-header">
+    <a class="tb-brand" href="index.html">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#1E2A25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6c0-2 10-2 10 0"/><rect x="7" y="7" width="18" height="6" rx="2.5" fill="#F6C35B"/><rect x="7" y="14" width="18" height="6" rx="2.5" fill="#CFE8D6"/><rect x="7" y="21" width="18" height="6" rx="2.5" fill="#F9D3CF"/></svg>
+      <span class="tb-brand__name" style="font-size:23px">টিফিনব্রেক</span>
+    </a>
+    <a class="tb-avatar tb-avatar--pink" href="profile.html" aria-label="আমার প্রোফাইল" style="width:44px; height:44px; border-width:2px; font-size:19px">স</a>
+  </header>
+
+  <main class="tb-main">
+
+    <!-- <DiaryEmptyState /> -->
+    <section class="tb-card tb-card--pad" aria-labelledby="tb-diary" style="padding-bottom:20px">
+      <h2 id="tb-diary"><span class="tb-marker" style="font-family:var(--tb-font-display); font-size:20px">আমার ডায়েরি</span></h2>
+      <div style="display:flex; justify-content:center; margin:16px 0 4px">
+        <svg aria-hidden="true" width="190" height="118" viewBox="0 0 190 118" fill="none" stroke="#1E2A25" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M95 22C78 10 44 8 12 15v90c32-7 66-5 83 7 17-12 51-14 83-7V15C146 8 112 10 95 22z" fill="#FFFDF5"/>
+          <path d="M95 22v90"/>
+          <path d="M26 36h52M26 50h52M26 64h52M26 78h36M112 36h52M112 50h52M112 64h40" stroke="#B5D4F4" stroke-width="1.5"/>
+          <path d="M20 30v70" stroke="#F09595" stroke-width="1.5"/>
+          <g transform="rotate(-38 140 86)"><rect x="112" y="80" width="46" height="12" rx="2" fill="#F6C35B"/><path d="M158 80l12 6-12 6z" fill="#F3E3C3"/><rect x="104" y="80" width="8" height="12" rx="2" fill="#F9A9A0"/></g>
+          <rect x="34" y="2" width="36" height="14" rx="2" fill="rgba(255,255,255,0.75)" stroke="rgba(30,42,37,0.3)" stroke-width="1" transform="rotate(-6 52 9)"/>
+        </svg>
+      </div>
+      <p class="tb-display" style="margin-top:10px; text-align:center; font-size:23px; line-height:1.35; color:var(--tb-board)">ডায়েরির প্রথম পাতাটা এখনো খালি</p>
+      <p class="tb-lead" style="margin:4px 0 18px; text-align:center; line-height:1.6">স্কুলের কোন গল্পটা দিয়ে শুরু করবে?</p>
+      <a class="tb-btn tb-btn--primary tb-btn--block" href="school.html" style="min-height:52px; border-radius:14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>
+        প্রথম গল্পটা লিখি</a>
+    </section>
+
+    <h2 class="tb-h2 tb-h2--sm" style="margin:6px 4px -4px">নতুন গল্প</h2>
+
+    <!-- <StoryCard story={...} /> × n -->
+    <article class="tb-card">
+      <a class="tb-story-card__photo tb-photo" href="story.html">[ স্কুলের পুরোনো ছবি ]</a>
+      <div class="tb-story-card__body">
+        <div class="tb-author">
+          <a class="tb-avatar" href="profile.html" aria-label="রাফি আহমেদ এর প্রোফাইল"><svg aria-hidden="true" viewBox="0 0 40 40"><rect width="40" height="40" fill="#A9BED2"/><circle cx="20" cy="16" r="7.5" fill="#F1DCC8"/><path d="M14 13c1-5 11-5 12 0-2-2-10-2-12 0z" fill="#3B2A20"/><path d="M5 40c1.5-9 7.5-13 15-13s13.5 4 15 13z" fill="#2F5D8A"/></svg></a>
+          <div class="tb-author__text"><a class="tb-author__name" href="profile.html">রাফি আহমেদ</a><div class="tb-meta">রূপনগর হাই স্কুল · ২ ঘণ্টা আগে</div></div>
+        </div>
+        <a class="tb-story-card__link" href="story.html">
+          <h3 class="tb-story-card__title">টিফিনের পরোটা আর মিঠুর সেই চুরি</h3>
+          <p class="tb-story-card__excerpt">ক্লাস সেভেনে রোজ টিফিন বক্স খুলে দেখতাম একটা পরোটা নেই। একদিন ঠিক করলাম, চোরটাকে আজ ধরবই…</p>
+        </a>
+        <div class="tb-story-card__actions">
+          <button type="button" class="tb-love" aria-pressed="false" aria-label="ভালোবাসা দাও" data-count="24">
+            <svg width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+            <span class="tb-love__count">২৪</span></button>
+          <button type="button" class="tb-ghost-btn" aria-label="শেয়ার করো">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/></svg>
+            শেয়ার</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="tb-card">
+      <div class="tb-story-card__body">
+        <div class="tb-author">
+          <a class="tb-avatar tb-avatar--yellow" href="profile.html" aria-label="নুসরাত জাহান এর প্রোফাইল">ন</a>
+          <div class="tb-author__text"><a class="tb-author__name" href="profile.html">নুসরাত জাহান</a><div class="tb-meta">শান্তিনগর গার্লস স্কুল · গতকাল</div></div>
+        </div>
+        <a class="tb-story-card__link" href="story.html">
+          <h3 class="tb-story-card__title">বৃষ্টির দিনে হাফ ছুটি</h3>
+          <p class="tb-story-card__excerpt">সকাল থেকেই আকাশ কালো। হেডস্যার মাইকে হাফ ছুটির কথা বলতেই পুরো স্কুল একসাথে চিৎকার দিয়ে উঠল…</p>
+        </a>
+        <div class="tb-story-card__actions">
+          <button type="button" class="tb-love" aria-pressed="false" aria-label="ভালোবাসা দাও" data-count="41">
+            <svg width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+            <span class="tb-love__count">৪১</span></button>
+          <button type="button" class="tb-ghost-btn" aria-label="শেয়ার করো">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/></svg>
+            শেয়ার</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="tb-card">
+      <a class="tb-story-card__photo tb-photo" href="story.html">[ স্কুলের পুরোনো ছবি ]</a>
+      <div class="tb-story-card__body">
+        <div class="tb-author">
+          <a class="tb-avatar tb-avatar--sky" href="profile.html" aria-label="তানভীর হাসান এর প্রোফাইল"><svg aria-hidden="true" viewBox="0 0 40 40"><rect width="40" height="40" fill="#A9BED2"/><circle cx="20" cy="16" r="7.5" fill="#F1DCC8"/><path d="M14 13c1-5 11-5 12 0-2-2-10-2-12 0z" fill="#3B2A20"/><path d="M5 40c1.5-9 7.5-13 15-13s13.5 4 15 13z" fill="#2F5D8A"/></svg></a>
+          <div class="tb-author__text"><a class="tb-author__name" href="profile.html">তানভীর হাসান</a><div class="tb-meta">রূপনগর হাই স্কুল · ৩ দিন আগে</div></div>
+        </div>
+        <a class="tb-story-card__link" href="story.html">
+          <h3 class="tb-story-card__title">অংক স্যারের বেত আর আমার ডায়েরি</h3>
+          <p class="tb-story-card__excerpt">অংক খাতার শেষ পাতায় লুকিয়ে ডায়েরি লিখতাম। যেদিন স্যার খাতাটা হাতে নিলেন, বুকটা ধক করে উঠল…</p>
+        </a>
+        <div class="tb-story-card__actions">
+          <button type="button" class="tb-love" aria-pressed="false" aria-label="ভালোবাসা দাও" data-count="17">
+            <svg width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+            <span class="tb-love__count">১৭</span></button>
+          <button type="button" class="tb-ghost-btn" aria-label="শেয়ার করো">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/></svg>
+            শেয়ার</button>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <!-- <BottomNav active="home" /> -->
+  <nav class="tb-bottom-nav" aria-label="প্রধান মেনু">
+    <a class="tb-bottom-nav__item" href="feed.html" aria-current="page">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFE9A8" stroke="#1E2A25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>হোম</a>
+    <a class="tb-bottom-nav__item tb-bottom-nav__fab-wrap" href="school.html">
+      <span class="tb-fab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></span>লেখো</a>
+    <a class="tb-bottom-nav__item" href="profile.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>প্রোফাইল</a>
+  </nav>
+</div>
+<script src="js/demo.js"></script>
+</body>
+</html>

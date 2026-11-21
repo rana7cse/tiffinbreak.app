@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>টিফিনব্রেক | স্কুল বা কলেজ যোগ করো</title>
+<link rel="icon" href="assets/logo-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<!-- Page: Add school  →  React: <SchoolSheet open onSave onSkip /> (shown over the feed) -->
+<div class="tb-app">
+  <!-- Background skeleton (stands in for the feed behind the sheet) -->
+  <div aria-hidden="true" style="padding:18px 16px; display:flex; flex-direction:column; gap:16px">
+    <div style="height:40px; border-radius:10px; background:#EFE8D8"></div>
+    <div style="height:210px; border-radius:20px; background:var(--tb-board)"></div>
+    <div style="height:260px; border-radius:20px; background:#fff; border:var(--tb-border)"></div>
+    <div style="height:180px; border-radius:20px; background:#fff; border:var(--tb-border)"></div>
+  </div>
+
+  <div class="tb-scrim">
+    <section class="tb-sheet" role="dialog" aria-modal="true" aria-labelledby="tb-school-title">
+      <div class="tb-sheet__grip" aria-hidden="true"></div>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:6px">
+        <div class="tb-tile-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1E2A25" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6" fill="#F9A9A0"/><path d="M5 10v9h14v-9" fill="#FFFFFF"/><path d="M10 19v-5h4v5" fill="#CFE8D6"/><path d="M12 4V2"/></svg>
+        </div>
+        <h2 id="tb-school-title" class="tb-display" style="font-size:26px; line-height:1.3; color:var(--tb-board)">তোমার স্কুল বা কলেজের নাম কী?</h2>
+      </div>
+      <p class="tb-lead" style="line-height:1.6">গল্পের পাশে স্কুল বা কলেজের নাম থাকলে পুরোনো বন্ধুরা সহজেই চিনে ফেলবে।</p>
+
+      <label class="tb-label" for="tb-school" style="margin-top:6px">স্কুল বা কলেজের নাম</label>
+      <input id="tb-school" class="tb-input" type="text" placeholder="যেমন: রূপনগর হাই স্কুল" autocomplete="off">
+
+      <div style="display:flex; flex-direction:column; gap:4px">
+        <span class="tb-meta" id="tb-school-hint">বন্ধুরা এই স্কুল-কলেজগুলো লিখেছে</span>
+        <div id="tb-school-list" role="listbox" aria-labelledby="tb-school-hint" style="display:flex; flex-direction:column; gap:4px">
+          <!-- <SchoolSuggestion name /> × n — rendered by js/demo.js -->
+        </div>
+      </div>
+
+      <a class="tb-btn tb-btn--primary tb-btn--lg tb-btn--block" href="write.html" style="margin-top:6px">সেভ করো, লেখা শুরু করি</a>
+      <a class="tb-link" href="feed.html" style="align-self:center">এখন না, পরে দেবো</a>
+    </section>
+  </div>
+</div>
+<script src="js/demo.js"></script>
+</body>
+</html>

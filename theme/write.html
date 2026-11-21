@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>টিফিনব্রেক | গল্প লেখো</title>
+<link rel="icon" href="assets/logo-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<!-- Page: Write  →  React: <WritePage /> -->
+<div class="tb-app tb-app--reading" style="height:100vh; min-height:640px">
+
+  <header class="tb-header tb-header--reading" style="padding:10px 12px 10px 8px">
+    <a class="tb-icon-btn" href="feed.html" aria-label="বন্ধ করো">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E2A25" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+    <span style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--tb-muted)"><span aria-hidden="true" style="width:8px; height:8px; border-radius:50%; background:#2E8B57"></span>নিজে নিজেই সেভ হচ্ছে</span>
+    <a class="tb-btn tb-btn--primary tb-btn--pill" href="story.html" style="font-size:16px; padding:0 18px">পোস্ট করো</a>
+  </header>
+
+  <main style="flex:1; padding:18px 20px 0; display:flex; flex-direction:column; gap:14px; min-height:0">
+    <button type="button" class="tb-dropzone">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+      পুরোনো একটা ছবি দাও (না দিলেও চলবে)</button>
+
+    <label class="tb-sr-only" for="tb-title">গল্পের নাম</label>
+    <input id="tb-title" class="tb-field tb-field--title" type="text" placeholder="গল্পের একটা নাম দাও">
+
+    <div style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--tb-muted)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v9h14v-9"/></svg>
+      রূপনগর হাই স্কুল · <a href="school.html" style="color:var(--tb-muted)">বদলাও</a>
+    </div>
+
+    <label class="tb-sr-only" for="tb-body">তোমার গল্প</label>
+    <textarea id="tb-body" class="tb-field tb-field--body" placeholder="এখান থেকে লেখা শুরু করো… কী লিখবে ভেবে না পেলে নিচের প্রশ্নটা দেখো।"></textarea>
+
+    <!-- <WritingPrompt /> — hidden once the body has 8+ words -->
+    <section class="tb-prompt" id="tb-prompt">
+      <span class="tb-tape" aria-hidden="true"></span>
+      <p style="font-size:14px; font-weight:600; color:#6B4E08">কোথা থেকে শুরু করবে বুঝছো না?</p>
+      <p id="tb-prompt-text" style="margin:4px 0 12px; font-size:17px; line-height:1.55; font-weight:500">স্কুলের প্রথম দিনটা কেমন ছিল? কার হাত ধরে গেট পেরিয়েছিলে?</p>
+      <div style="display:flex; gap:8px">
+        <button type="button" class="tb-btn tb-btn--dark" id="tb-use-prompt" style="border-radius:12px; font-size:15px; padding:0 14px; box-shadow:var(--tb-shadow-sm)">এটা নিয়েই লিখি</button>
+        <button type="button" class="tb-btn" id="tb-next-prompt" style="border-radius:12px; font-size:15px; padding:0 14px; box-shadow:var(--tb-shadow-sm)">আরেকটা প্রশ্ন</button>
+      </div>
+    </section>
+  </main>
+
+  <footer style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding:8px 12px 22px; border-top:var(--tb-border); background:var(--tb-paper-2)">
+    <button type="button" class="tb-ghost-btn" aria-label="ছবি যোগ করো">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F5A54" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>ছবি</button>
+    <span class="tb-meta"><span id="tb-words">০</span> শব্দ লেখা হয়েছে</span>
+  </footer>
+</div>
+<script src="js/demo.js"></script>
+</body>
+</html>
