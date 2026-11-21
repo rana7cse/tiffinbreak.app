@@ -4,7 +4,16 @@ import { bn } from "~/lib/bangla-digits";
 describe("bn (Bangla digits)", () => {
   it("maps each digit 0-9", () => {
     expect([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(bn)).toEqual([
-      "০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯",
+      "০",
+      "১",
+      "২",
+      "৩",
+      "৪",
+      "৫",
+      "৬",
+      "৭",
+      "৮",
+      "৯",
     ]);
   });
 
