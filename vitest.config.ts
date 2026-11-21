@@ -18,6 +18,8 @@ export default defineConfig(async () => {
       }),
     ],
     resolve: { tsconfigPaths: true },
-    test: { setupFiles: ["./test/apply-migrations.ts"] },
+    // Process CSS like the real build so `?url` imports resolve to an href
+    // (Vitest stubs CSS to "" by default).
+    test: { css: true, setupFiles: ["./test/apply-migrations.ts"] },
   };
 });

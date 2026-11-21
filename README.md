@@ -31,6 +31,7 @@ npm run dev        # http://localhost:5173
 | `npm run dev` | Vite dev server with the Worker running in workerd |
 | `npm test` | Run the test suite once (`npm run test:watch` to watch) |
 | `npm run typecheck` | Generate Worker + route types, then `tsc` |
+| `npm run lint` | Lint and format check with Biome (`npm run format` to fix) |
 | `npm run build` | Production build into `build/` |
 | `npm run preview` | Build, then serve the production build locally |
 | `npm run deploy` | Build and deploy with Wrangler (needs a Cloudflare login) |
@@ -89,7 +90,7 @@ import { exports } from "cloudflare:workers";
 const res = await exports.default.fetch("http://example.com/health");
 ```
 
-Tests live in `test/`.
+Tests live in `test/`. CI (`.github/workflows/ci.yml`) runs lint, typecheck and tests on every pull request and push to `main`.
 
 ## Project layout
 

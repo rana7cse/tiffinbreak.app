@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="116" viewBox="0 0 120 116" role="img" aria-label="TiffinBreak">
+<rect x="4" y="2" width="112" height="112" rx="32" fill="#FBF7EE" stroke="#1E2A25" stroke-width="3"/>
+<path d="M60 30C51.5 25 49 19.5 52.5 16.2 55.5 13.4 58.8 14.8 60 17.5 61.2 14.8 64.5 13.4 67.5 16.2 71 19.5 68.5 25 60 30Z" fill="#C0501D" stroke="#1E2A25" stroke-width="2" stroke-linejoin="round"/>
+<path d="M40 49C40 33 80 33 80 49" fill="none" stroke="#1E2A25" stroke-width="5" stroke-linecap="round"/>
+<path d="M29 52V98M91 52V98" stroke="#1E2A25" stroke-width="4" stroke-linecap="round"/>
+<rect x="33" y="47" width="54" height="16" rx="7" fill="#F6C35B" stroke="#1E2A25" stroke-width="2.5"/>
+<rect x="33" y="65" width="54" height="16" rx="7" fill="#CFE8D6" stroke="#1E2A25" stroke-width="2.5"/>
+<rect x="33" y="83" width="54" height="16" rx="7" fill="#F9D3CF" stroke="#1E2A25" stroke-width="2.5"/>
+</svg>
