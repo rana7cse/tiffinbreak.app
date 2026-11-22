@@ -251,6 +251,22 @@ export default function Home() {
           {strings.brand.name}
         </span>
         <span>{t.footer}</span>
+        <nav
+          style={{
+            display: "flex",
+            gap: 16,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          <a className="tb-link" href="/privacy">
+            {strings.legal.privacyLink}
+          </a>
+          <a className="tb-link" href="/data-deletion">
+            {strings.legal.dataDeletionLink}
+          </a>
+        </nav>
+        <span>{strings.legal.poweredBy}</span>
       </footer>
     </>
   );

@@ -91,6 +91,19 @@ export const strings = {
     footer: "বন্ধুদের জন্য, ভালোবাসা দিয়ে বানানো",
   },
 
+  /** Privacy and data deletion pages; their long-form text is in app/content/legal.ts. */
+  legal: {
+    privacyLink: "গোপনীয়তা নীতি",
+    dataDeletionLink: "ডেটা মুছে ফেলা",
+    backToHome: "হোমে ফিরে যাও",
+    /** A company name: stays in English, plain text. */
+    poweredBy: "Powered by Xaonic LLC",
+    privacyDescription:
+      "টিফিনব্রেক কী তথ্য নেয়, কেন নেয় এবং কীভাবে ব্যবহার করে। Privacy Policy of TiffinBreak.",
+    dataDeletionDescription:
+      "টিফিনব্রেক থেকে নিজের অ্যাকাউন্ট ও তথ্য মুছে ফেলার নিয়ম। How to delete your TiffinBreak data.",
+  },
+
   login: {
     title: "লগইন",
     lead: "গল্প লিখতে আর পড়তে আগে লগইন করে নাও।",

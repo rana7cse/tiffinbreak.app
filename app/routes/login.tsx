@@ -59,6 +59,16 @@ export default function Login({ loaderData }: Route.ComponentProps) {
           </form>
         ))}
       </div>
+      <nav
+        style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 22 }}
+      >
+        <a className="tb-link" href="/privacy">
+          {strings.legal.privacyLink}
+        </a>
+        <a className="tb-link" href="/data-deletion">
+          {strings.legal.dataDeletionLink}
+        </a>
+      </nav>
     </main>
   );
 }
