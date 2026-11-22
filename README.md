@@ -135,7 +135,9 @@ The app starts in **Development mode**: only people with a role on the app
 (admins, developers, testers) can sign in. Public use needs the app switched to
 Live, which requires:
 
-- a privacy policy URL and a data deletion URL (or instructions) in Settings > Basic;
+- a privacy policy URL and a data deletion URL (or instructions) in Settings > Basic:
+  - **Privacy Policy URL**: `https://tiffinbreak.app/privacy`
+  - **Data Deletion Instructions URL**: `https://tiffinbreak.app/data-deletion`;
 - Business Verification of the owning Meta business;
 - App Review for any permission beyond the defaults (`email` and
   `public_profile` are default, so normally none).
