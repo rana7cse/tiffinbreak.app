@@ -1,6 +1,6 @@
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 // Tests run inside workerd and hit the Worker's fetch handler: the single
 // test seam (see spec #1). reactRouter() provides the server build that
@@ -31,6 +31,11 @@ export default defineConfig(async () => {
     resolve: { tsconfigPaths: true },
     // Process CSS like the real build so `?url` imports resolve to an href
     // (Vitest stubs CSS to "" by default).
-    test: { css: true, setupFiles: ["./test/apply-migrations.ts"] },
+    test: {
+      css: true,
+      setupFiles: ["./test/apply-migrations.ts"],
+      // Agent worktrees live under .claude/; never collect their tests.
+      exclude: [...configDefaults.exclude, ".claude/**"],
+    },
   };
 });

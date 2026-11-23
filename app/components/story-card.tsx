@@ -96,17 +96,16 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
           <p className="tb-story-card__excerpt">{s.excerpt}</p>
         </a>
         <div className="tb-story-card__actions">
-          {/* Static until the Love ticket wires the tap. */}
-          <button
-            type="button"
+          {/* Giving Love happens on the Story page; the card links there. */}
+          <a
             className="tb-love"
-            aria-pressed="false"
+            href={storyHref}
             aria-label={strings.love.give}
-            data-count={s.loveTotal}
+            style={{ textDecoration: "none" }}
           >
             <HeartIcon />
             <span className="tb-love__count">{bn(s.loveTotal)}</span>
-          </button>
+          </a>
           <button
             type="button"
             className="tb-ghost-btn"
