@@ -113,6 +113,9 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
     return <LoginScreen returnTo={loaderData.returnTo} />;
   }
   const s = loaderData;
+  const writerHref = s.writer.handle
+    ? `/writers/${s.writer.handle}`
+    : "/profile";
   const firstName = firstNameOf(s.writer.name);
   const path = `/stories/${s.id}`;
   return (
@@ -154,7 +157,7 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
         <h1 className="tb-h1">{s.title}</h1>
 
         <a
-          href="/profile"
+          href={writerHref}
           style={{
             display: "flex",
             alignItems: "center",
@@ -287,7 +290,7 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
 
         <a
           className="tb-row"
-          href="/profile"
+          href={writerHref}
           style={{ marginTop: 24, padding: 16, boxShadow: "var(--tb-shadow)" }}
         >
           <Avatar name={s.writer.name} image={s.writer.image} />

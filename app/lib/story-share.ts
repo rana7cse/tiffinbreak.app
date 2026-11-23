@@ -1,7 +1,7 @@
 /**
  * Absolute URL of a Story's cover image, or null without one. The one place
- * that knows how a `cover_key` becomes a URL (the cover-photo ticket may
- * change it), so pages and share-preview tags stay in sync.
+ * that knows how a `cover_key` becomes a URL, so pages and share-preview tags
+ * stay in sync. A key is `covers/<random>.<ext>`, served by `routes/covers.ts`.
  */
 export function coverUrl(
   origin: string,
