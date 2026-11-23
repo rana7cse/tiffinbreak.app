@@ -9,6 +9,7 @@ export default [
   route("write", "routes/write.tsx"),
   route("schools", "routes/schools.ts"),
   route("stories/:id", "routes/story.tsx"),
+  route("covers/:key", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("data-deletion", "routes/data-deletion.tsx"),

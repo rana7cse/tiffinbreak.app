@@ -8,6 +8,7 @@ import {
 } from "~/components/icons";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
+import { coverUrl } from "~/lib/cover";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
@@ -95,7 +96,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
 
       {s.coverKey ? (
         <img
-          src={`/${s.coverKey}`}
+          src={coverUrl(s.coverKey)}
           alt=""
           style={{
             display: "block",

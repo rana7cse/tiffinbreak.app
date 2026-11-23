@@ -85,7 +85,13 @@ export function paragraphs(body: string): string[] {
 /** Inserts a published Story and returns its id. */
 export async function publishStory(
   env: Pick<Env, "DB">,
-  input: { writerId: string; schoolId: string; title: string; body: string },
+  input: {
+    writerId: string;
+    schoolId: string;
+    title: string;
+    body: string;
+    coverKey?: string | null;
+  },
 ): Promise<string> {
   const id = crypto.randomUUID();
   await getDb(env.DB)

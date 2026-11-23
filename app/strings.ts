@@ -134,7 +134,13 @@ export const strings = {
     nextPrompt: "আরেকটা প্রশ্ন",
     wordsWritten: "শব্দ লেখা হয়েছে",
     publishing: "পোস্ট হচ্ছে…",
+    coverPick: "পুরোনো একটা ছবি দাও (না দিলেও চলবে)",
+    coverChange: "ছবি বদলাও",
+    coverRemove: "ছবি সরাও",
+    coverAlt: "গল্পের কভার ছবি",
     errors: {
+      coverType: "ছবি JPG, PNG বা WebP হতে হবে।",
+      coverTooBig: (max: string) => `ছবি সর্বোচ্চ ${max} মেগাবাইটের হতে পারবে।`,
       titleRequired: "গল্পের একটা নাম দাও।",
       titleTooLong: (max: string) => `নাম সর্বোচ্চ ${max} অক্ষরের হতে পারবে।`,
       bodyRequired: "গল্পের লেখা খালি রাখা যাবে না।",
