@@ -178,7 +178,13 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
               ) : null}
             </span>
             <span style={{ display: "block", color: "var(--tb-subtle)" }}>
-              {s.school.name} · {s.date} · {t.readingTime(bn(s.minutes))}
+              <a
+                href={`/schools/${s.school.id}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                {s.school.name}
+              </a>{" "}
+              · {s.date} · {t.readingTime(bn(s.minutes))}
             </span>
           </span>
         </a>

@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or } from "drizzle-orm";
+import { and, count, desc, eq, lt, or } from "drizzle-orm";
 import { getDb } from "~/db";
 import { school, story, user } from "~/db/schema";
 import { strings } from "~/strings";
@@ -62,9 +62,32 @@ export async function listFeed(
   return queryFeed(env, parsed);
 }
 
+/** One page of a School's visible Stories, newest first, after `cursor`. */
+export function listSchoolStories(
+  env: Pick<Env, "DB">,
+  schoolId: string,
+  cursor: string | null,
+): Promise<FeedPage> {
+  return queryFeed(env, parseCursor(cursor), schoolId);
+}
+
+/** How many visible Stories a School has. */
+export async function countSchoolStories(
+  env: Pick<Env, "DB">,
+  schoolId: string,
+): Promise<number> {
+  const row = await getDb(env.DB)
+    .select({ n: count() })
+    .from(story)
+    .where(and(visibleStory, eq(story.schoolId, schoolId)))
+    .get();
+  return row?.n ?? 0;
+}
+
 async function queryFeed(
   env: Pick<Env, "DB">,
   after: { at: number; id: string } | null,
+  schoolId?: string,
 ): Promise<FeedPage> {
   const rows = await getDb(env.DB)
     .select({
@@ -88,6 +111,7 @@ async function queryFeed(
     .where(
       and(
         visibleStory,
+        schoolId ? eq(story.schoolId, schoolId) : undefined,
         after
           ? or(
               lt(story.createdAt, new Date(after.at)),

@@ -8,6 +8,7 @@ export default [
   route("feed", "routes/feed.tsx"),
   route("write", "routes/write.tsx"),
   route("schools", "routes/schools.ts"),
+  route("schools/:id", "routes/school.tsx"),
   route("stories/:id", "routes/story.tsx"),
   route("covers/:name", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),
