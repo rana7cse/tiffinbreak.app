@@ -42,6 +42,62 @@ describe("landing page", () => {
     expect(html).toMatch(/<input [^>]*name="returnTo"/);
     expect(html).toContain('value="/feed"');
   });
+
+  it("has a Google form with returnTo=/feed in the top section", async () => {
+    const { html } = await getHtml("/");
+    const top = html.slice(0, html.indexOf('id="how"'));
+
+    expect(top).toMatch(
+      /<form [^>]*action="\/login\/google"[^>]*>(?:(?!<\/form>).)*name="returnTo"[^>]*value="\/feed"/s,
+    );
+    expect(top).toMatch(
+      /<form [^>]*action="\/login\/facebook"[^>]*>(?:(?!<\/form>).)*name="returnTo"[^>]*value="\/feed"/s,
+    );
+  });
+
+  it("has no look-around link and Facebook comes before Google", async () => {
+    const { html } = await getHtml("/");
+
+    expect(html).not.toContain('href="#how"');
+    expect(html.indexOf('action="/login/facebook"')).toBeLessThan(
+      html.indexOf('action="/login/google"'),
+    );
+  });
+
+  it("bottom call-to-action links to /login and posts to no provider", async () => {
+    const { html } = await getHtml("/");
+    const bottom = html.slice(html.indexOf('id="how"'));
+
+    expect(bottom).toMatch(/<a [^>]*tb-btn[^>]*href="\/login\?intent=write"/);
+    expect(bottom).not.toContain('action="/login/google"');
+    expect(bottom).not.toContain('action="/login/facebook"');
+  });
+});
+
+describe("GET /login?intent=write", () => {
+  const writeTitle = "তোমার গল্প লিখতে লগইন করো";
+
+  it("shows the write heading and line with both providers", async () => {
+    const { html } = await getHtml("/login?intent=write");
+
+    expect(html).toContain(writeTitle);
+    expect(html).toContain("গুগল বা ফেসবুক দিয়ে এক ট্যাপে লগইন করো");
+    expect(html).toContain('action="/login/google"');
+    expect(html).toContain('action="/login/facebook"');
+    expect(html).toContain('value="/feed"');
+  });
+
+  it("stays the plain login page without intent", async () => {
+    const { html } = await getHtml("/login");
+
+    expect(html).not.toContain(writeTitle);
+  });
+
+  it("stays the plain login page for an unknown intent", async () => {
+    const { html } = await getHtml("/login?intent=bogus");
+
+    expect(html).not.toContain(writeTitle);
+  });
 });
 
 describe("GET /login", () => {
