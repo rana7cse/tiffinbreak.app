@@ -82,11 +82,6 @@ export function paragraphs(body: string): string[] {
     .filter(Boolean);
 }
 
-/** Where a cover image is served from; the one place to change it (#44). */
-export function coverUrl(coverKey: string): string {
-  return `/${coverKey}`;
-}
-
 /** Inserts a published Story, invalidates the Feed cache and returns its id. */
 export async function publishStory(
   env: Pick<Env, "DB" | "CACHE">,

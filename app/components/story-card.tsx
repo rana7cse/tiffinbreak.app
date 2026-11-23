@@ -1,7 +1,7 @@
 import { HeartIcon, ShareIcon } from "~/components/icons";
 import { bn } from "~/lib/bangla-digits";
 import { type FeedStory, relativeTime } from "~/lib/feed";
-import { coverUrl } from "~/lib/stories";
+import { coverUrl } from "~/lib/story-share";
 import { strings } from "~/strings";
 
 const AVATAR_VARIANTS = [
@@ -51,7 +51,7 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
       {s.coverKey ? (
         <a className="tb-story-card__photo tb-photo" href={storyHref}>
           <img
-            src={coverUrl(s.coverKey)}
+            src={coverUrl("", s.coverKey) ?? undefined}
             alt=""
             loading="lazy"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
