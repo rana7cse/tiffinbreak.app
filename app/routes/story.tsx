@@ -1,11 +1,13 @@
 import { Form, redirect } from "react-router";
 import { Avatar } from "~/components/avatar";
 import { BackIcon, ChevronRightIcon, ShareIcon } from "~/components/icons";
+import { LoginScreen } from "~/components/login-screen";
 import { LoveActionButton, LoveBox, useLove } from "~/components/love-box";
+import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
 import { getMyLove } from "~/lib/love";
-import { requireWriter } from "~/lib/require-writer";
+import { getWriter, requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
   canReadStory,
@@ -16,6 +18,7 @@ import {
   readingTimeMinutes,
   reportStory,
 } from "~/lib/stories";
+import { coverUrl, sharePreviewMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/story";
 
@@ -27,8 +30,16 @@ export const handle = {
 } as const satisfies ShellHandle;
 
 export function meta({ loaderData }: Route.MetaArgs) {
+  if (loaderData?.preview) {
+    return [
+      { title: strings.meta.pageTitle(loaderData.preview.title) },
+      ...sharePreviewMeta(loaderData.preview),
+    ];
+  }
   return [{ title: strings.meta.pageTitle(loaderData?.title ?? t.readTitle) }];
 }
+
+const firstNameOf = (name: string) => name.split(/\s+/)[0] ?? name;
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { user } = await requireWriter({ request, context });
@@ -51,13 +62,35 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
-  const { user } = await requireWriter({ request, context });
+  const session = await getWriter({ request, context });
   const { env } = context.get(cloudflareContext);
   const found = await getStoryById(env, params.id);
+  const url = new URL(request.url);
+
+  if (!session) {
+    // ADR-0001: logged-out visitors get the login page, with preview tags for
+    // crawlers. Hidden or missing Stories get a plain redirect: no leaks.
+    const returnTo = url.pathname + url.search;
+    if (!found || found.hidden) {
+      throw redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
+    return {
+      preview: {
+        title: found.title,
+        description: t.shareDescription(firstNameOf(found.writer.name)),
+        url: url.origin + url.pathname,
+        image: coverUrl(url.origin, found.coverKey),
+      },
+      returnTo,
+    };
+  }
+
+  const { user } = session;
   if (!found || !canReadStory(found, user as { id: string; role?: string })) {
     throw new Response("Not Found", { status: 404 });
   }
   return {
+    preview: null,
     id: found.id,
     title: found.title,
     paragraphs: paragraphs(found.body),
@@ -74,9 +107,25 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   };
 }
 
-export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
+export default function StoryPage({ loaderData }: Route.ComponentProps) {
+  if (loaderData.preview) {
+    return <LoginScreen returnTo={loaderData.returnTo} />;
+  }
+  return <ReadStory s={loaderData} />;
+}
+
+type ReadData = Exclude<
+  Route.ComponentProps["loaderData"],
+  { preview: object }
+>;
+
+function ReadStory({ s }: { s: ReadData }) {
   const love = useLove(s.id, { mine: s.myLove, total: s.loveTotal }, s.isOwn);
-  const firstName = s.writer.name.split(/\s+/)[0] ?? s.writer.name;
+  const writerHref = s.writer.handle
+    ? `/writers/${s.writer.handle}`
+    : "/profile";
+  const firstName = firstNameOf(s.writer.name);
+  const path = `/stories/${s.id}`;
   return (
     <>
       <header className="tb-header tb-header--compact tb-header--reading">
@@ -88,14 +137,19 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
           <BackIcon size={22} color="#1E2A25" />
         </a>
         <span className="tb-header__title">{strings.brand.name}</span>
-        <button type="button" className="tb-icon-btn" aria-label={t.share}>
+        <ShareButton
+          path={path}
+          title={s.title}
+          className="tb-icon-btn"
+          label={t.share}
+        >
           <ShareIcon size={21} color="#1E2A25" />
-        </button>
+        </ShareButton>
       </header>
 
       {s.coverKey ? (
         <img
-          src={`/${s.coverKey}`}
+          src={coverUrl("", s.coverKey) ?? undefined}
           alt=""
           style={{
             display: "block",
@@ -111,7 +165,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
         <h1 className="tb-h1">{s.title}</h1>
 
         <a
-          href="/profile"
+          href={writerHref}
           style={{
             display: "flex",
             alignItems: "center",
@@ -211,7 +265,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
 
         <a
           className="tb-row"
-          href="/profile"
+          href={writerHref}
           style={{ marginTop: 24, padding: 16, boxShadow: "var(--tb-shadow)" }}
         >
           <Avatar name={s.writer.name} image={s.writer.image} />
@@ -227,17 +281,17 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
         </a>
       </article>
 
-      {/* StoryActionBar: Share stays static until the Share ticket. */}
       <nav className="tb-action-bar" aria-label={t.actions}>
         <LoveActionButton love={love} disabled={s.isOwn} />
-        <button
-          type="button"
+        <ShareButton
+          path={path}
+          title={s.title}
           className="tb-btn tb-btn--dark tb-btn--pill"
           style={{ fontSize: 16, padding: "0 18px" }}
         >
           <ShareIcon size={20} color="#FFFFFF" />
           {t.sendToFriends}
-        </button>
+        </ShareButton>
       </nav>
     </>
   );
