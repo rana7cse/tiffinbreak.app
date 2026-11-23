@@ -1,7 +1,13 @@
 import { Form, redirect } from "react-router";
 import { BackIcon } from "~/components/icons";
 import { cloudflareContext } from "~/context";
-import { listReviewItems, removeStory, restoreStory } from "~/lib/admin";
+import {
+  listReviewItems,
+  listSchoolNames,
+  mergeSchools,
+  removeStory,
+  restoreStory,
+} from "~/lib/admin";
 import { bn } from "~/lib/bangla-digits";
 import { requireAdmin } from "~/lib/require-writer";
 import { strings } from "~/strings";
@@ -16,7 +22,12 @@ export function meta(_: Route.MetaArgs) {
 export async function loader({ request, context }: Route.LoaderArgs) {
   await requireAdmin({ request, context });
   const { env } = context.get(cloudflareContext);
-  return { items: await listReviewItems(env) };
+  const url = new URL(request.url);
+  return {
+    items: await listReviewItems(env),
+    schools: await listSchoolNames(env),
+    merged: url.searchParams.get("merged") === "1",
+  };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -24,6 +35,18 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   const form = await request.formData();
   const intent = form.get("intent");
+  if (intent === "merge") {
+    const dup = form.get("duplicate");
+    const kept = form.get("kept");
+    if (typeof dup !== "string" || typeof kept !== "string") {
+      throw new Response("Bad Request", { status: 400 });
+    }
+    const result = await mergeSchools(env, dup, kept);
+    if (result === "not-found")
+      throw new Response("Not Found", { status: 404 });
+    if (result === "same") throw new Response(t.mergeSame, { status: 400 });
+    return redirect("/admin?merged=1", 303);
+  }
   const storyId = form.get("storyId");
   if (typeof storyId !== "string" || !storyId) {
     throw new Response("Bad Request", { status: 400 });
@@ -52,7 +75,52 @@ export default function AdminReview({ loaderData }: Route.ComponentProps) {
       </header>
 
       <div style={{ padding: "24px 20px" }}>
-        <p className="tb-lead">{t.lead}</p>
+        <section className="tb-card" style={{ padding: 16 }}>
+          <p style={{ fontWeight: 600 }}>{t.mergeTitle}</p>
+          <p className="tb-meta">{t.mergeLead}</p>
+          {loaderData.merged ? (
+            <p style={{ marginTop: 8 }}>{t.mergeDone}</p>
+          ) : null}
+          <datalist id="school-names">
+            {loaderData.schools.map((sc) => (
+              <option key={sc.id} value={sc.name} />
+            ))}
+          </datalist>
+          <Form
+            method="post"
+            className="tb-stack"
+            style={{ marginTop: 12 }}
+            onSubmit={(e) => {
+              if (!window.confirm(t.mergeConfirm)) e.preventDefault();
+            }}
+          >
+            <input type="hidden" name="intent" value="merge" />
+            <label>
+              {t.mergeDuplicate}
+              <input
+                name="duplicate"
+                list="school-names"
+                required
+                className="tb-input"
+              />
+            </label>
+            <label>
+              {t.mergeKept}
+              <input
+                name="kept"
+                list="school-names"
+                required
+                className="tb-input"
+              />
+            </label>
+            <button type="submit" className="tb-btn tb-btn--dark">
+              {t.mergeSubmit}
+            </button>
+          </Form>
+        </section>
+        <p className="tb-lead" style={{ marginTop: 20 }}>
+          {t.lead}
+        </p>
         {loaderData.items.length === 0 ? (
           <p className="tb-lead" style={{ marginTop: 20 }}>
             {t.empty}

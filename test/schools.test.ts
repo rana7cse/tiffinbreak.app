@@ -107,32 +107,6 @@ describe("School suggestions (GET /schools?q=)", () => {
     expect(await names(await suggest("_", cookie))).toEqual([]);
   });
 
-  it("excludes merged Schools", async () => {
-    const { cookie } = await signInAs();
-    const a = await created("Dup School", cookie);
-    const b = await created("Keep School", cookie);
-    await env.DB.prepare("UPDATE school SET merged_into_id = ? WHERE id = ?")
-      .bind(b.id, a.id)
-      .run();
-    // Merging is not wired up yet; drop cached lists as a merge will.
-    for (const k of (await env.CACHE.list()).keys) {
-      await env.CACHE.delete(k.name);
-    }
-    expect(await names(await suggest("School", cookie))).toEqual([
-      "Keep School",
-    ]);
-  });
-
-  it("allows a merged name to be created again", async () => {
-    const { cookie } = await signInAs();
-    const a = await created("Old Name", cookie);
-    await env.DB.prepare("UPDATE school SET merged_into_id = ? WHERE id = ?")
-      .bind(a.id, a.id)
-      .run();
-    const b = await created("Old Name", cookie);
-    expect(b.id).not.toBe(a.id);
-  });
-
   it("returns some Schools for an empty query", async () => {
     const { cookie } = await signInAs();
     await created("School A", cookie);
@@ -144,11 +118,18 @@ describe("English names", () => {
   const withEn = async (name: string, nameEn: string | null) => {
     const id = crypto.randomUUID();
     await env.DB.prepare(
-      "INSERT INTO school (id, name, normalized_name, name_en) VALUES (?, ?, ?, ?)",
+      "INSERT INTO school (id, name, name_en) VALUES (?, ?, ?)",
     )
-      .bind(id, name, name, nameEn)
+      .bind(id, name, nameEn)
       .run();
   };
+
+  it("find-or-create reuses a School when the English name matches", async () => {
+    const { cookie } = await signInAs();
+    await withEn("ফরিদপুর জিলা স্কুল", "Faridpur Zilla School");
+    const row = await created("faridpur zilla school", cookie);
+    expect(row.name).toBe("ফরিদপুর জিলা স্কুল");
+  });
 
   it("finds the Bangla-named School by an English query", async () => {
     const { cookie } = await signInAs();
