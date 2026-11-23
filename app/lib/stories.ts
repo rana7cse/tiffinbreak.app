@@ -81,3 +81,15 @@ export function paragraphs(body: string): string[] {
     .map((p) => p.trim())
     .filter(Boolean);
 }
+
+/** Inserts a published Story and returns its id. */
+export async function publishStory(
+  env: Pick<Env, "DB">,
+  input: { writerId: string; schoolId: string; title: string; body: string },
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await getDb(env.DB)
+    .insert(story)
+    .values({ id, ...input });
+  return id;
+}

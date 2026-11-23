@@ -103,11 +103,11 @@ describe("/write", () => {
     expect(res.headers.get("location")).toBe("/login?returnTo=%2Fwrite");
   });
 
-  it("renders the placeholder for a logged-in Writer", async () => {
+  it("renders the write page for a logged-in Writer", async () => {
     const { cookie } = await signInAs();
     const res = await get("/write", cookie);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("গল্প লেখা");
+    expect(await res.text()).toContain('id="tb-body"');
   });
 });
 
