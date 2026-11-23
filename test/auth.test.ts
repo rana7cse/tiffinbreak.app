@@ -223,3 +223,91 @@ describe("Facebook sign-in", () => {
     });
   });
 });
+
+describe("account linking", () => {
+  it("Google sign-in with the email of a Facebook Writer signs into that Writer", async () => {
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal(
+      "fetch",
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = new Request(input, init).url;
+        if (url.startsWith("https://oauth2.googleapis.com/token")) {
+          return Response.json({
+            access_token: "fake-access-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+            id_token: googleIdToken({
+              sub: "google-link",
+              email: "link@example.com",
+              email_verified: true,
+              name: "Link Writer",
+            }),
+          });
+        }
+        if (
+          url.startsWith("https://graph.facebook.com/v24.0/oauth/access_token")
+        ) {
+          return Response.json({
+            access_token: "fake-fb-token",
+            token_type: "bearer",
+            expires_in: 3600,
+          });
+        }
+        if (url.startsWith("https://graph.facebook.com/debug_token")) {
+          return Response.json({
+            data: {
+              is_valid: true,
+              app_id: "test-facebook-client-id",
+              user_id: "fb-link",
+            },
+          });
+        }
+        if (url.startsWith("https://graph.facebook.com/me")) {
+          return Response.json({
+            id: "fb-link",
+            name: "Link Writer",
+            email: "link@example.com",
+            picture: { data: { url: "https://example.com/link.jpg" } },
+          });
+        }
+        return realFetch(input, init);
+      },
+    );
+
+    async function signIn(provider: "facebook" | "google") {
+      const start = await exports.default.fetch(
+        `${ORIGIN}/api/auth/sign-in/social`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", origin: ORIGIN },
+          body: JSON.stringify({ provider, callbackURL: "/" }),
+        },
+      );
+      const { url } = (await start.json()) as { url: string };
+      const state = new URL(url).searchParams.get("state");
+      return exports.default.fetch(
+        `${ORIGIN}/api/auth/callback/${provider}?code=fake-code&state=${state}`,
+        { headers: { cookie: cookieHeader(start) }, redirect: "manual" },
+      );
+    }
+
+    const facebook = await signIn("facebook");
+    expect(facebook.status).toBe(302);
+
+    const google = await signIn("google");
+
+    expect(google.status).toBe(302);
+    expect(google.headers.get("location")).not.toContain("error");
+    expect(google.headers.getSetCookie().join(";")).toContain("session_token");
+    expect(
+      await env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM user WHERE email = 'link@example.com'",
+      ).first("n"),
+    ).toBe(1);
+    expect(
+      await env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM account WHERE provider_id IN ('google','facebook')",
+      ).first("n"),
+    ).toBeGreaterThanOrEqual(2);
+  });
+});

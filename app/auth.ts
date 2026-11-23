@@ -45,6 +45,19 @@ export function getAuth(env: Env) {
     baseURL: env.BETTER_AUTH_URL,
     database: drizzleAdapter(getDb(env.DB), { provider: "sqlite", schema }),
     socialProviders: providers,
+    account: {
+      accountLinking: {
+        enabled: true,
+        // Both providers only return emails they have verified, so a sign-in
+        // with the same email is the same Writer.
+        trustedProviders: Object.keys(socialProviders),
+        // Better Auth stores Facebook users with emailVerified=false (the
+        // Graph API never reports it), and by default refuses to link into a
+        // local user whose email is unverified. Without this, a Facebook-first
+        // Writer still hits account_not_linked when signing in with Google.
+        requireLocalEmailVerified: false,
+      },
+    },
   });
 }
 
