@@ -87,6 +87,19 @@ export function coverUrl(coverKey: string): string {
   return `/${coverKey}`;
 }
 
+/** Inserts a published Story, invalidates the Feed cache and returns its id. */
+export async function publishStory(
+  env: Pick<Env, "DB" | "CACHE">,
+  input: { writerId: string; schoolId: string; title: string; body: string },
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await getDb(env.DB)
+    .insert(story)
+    .values({ id, ...input });
+  await bumpFeedVersion(env.CACHE);
+  return id;
+}
+
 /**
  * The shared "exclude hidden" rule: every Story list (Feed, School, profile)
  * must put this in its `where`. Hidden Stories are for the Writer and Admins

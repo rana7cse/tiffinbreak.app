@@ -135,7 +135,24 @@ export const strings = {
 
   write: {
     title: "গল্প লেখা",
-    placeholder: "গল্প লেখার জায়গাটা শিগগিরই আসছে।",
+    close: "বন্ধ করো",
+    autosave: "নিজে নিজেই সেভ হচ্ছে",
+    storyTitle: "গল্পের নাম",
+    storyBody: "তোমার গল্প",
+    changeSchool: "বদলাও",
+    chooseSchool: "স্কুল বা কলেজ বেছে নাও",
+    promptTitle: "কোথা থেকে শুরু করবে বুঝছো না?",
+    usePrompt: "এটা নিয়েই লিখি",
+    nextPrompt: "আরেকটা প্রশ্ন",
+    wordsWritten: "শব্দ লেখা হয়েছে",
+    publishing: "পোস্ট হচ্ছে…",
+    errors: {
+      titleRequired: "গল্পের একটা নাম দাও।",
+      titleTooLong: (max: string) => `নাম সর্বোচ্চ ${max} অক্ষরের হতে পারবে।`,
+      bodyRequired: "গল্পের লেখা খালি রাখা যাবে না।",
+      bodyTooLong: (max: string) => `গল্প সর্বোচ্চ ${max} অক্ষরের হতে পারবে।`,
+      schoolRequired: "স্কুল বা কলেজ বেছে নাও।",
+    },
   },
 
   story: {

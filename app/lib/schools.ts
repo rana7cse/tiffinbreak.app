@@ -46,6 +46,19 @@ export async function findOrCreateSchool(
   return (await find()) ?? null;
 }
 
+/** A School by id, or null when it does not exist or was merged away. */
+export async function findSchoolById(
+  env: Pick<Env, "DB">,
+  id: string,
+): Promise<SchoolSummary | null> {
+  const row = await getDb(env.DB)
+    .select({ id: school.id, name: school.name })
+    .from(school)
+    .where(and(eq(school.id, id), isNull(school.mergedIntoId)))
+    .get();
+  return row ?? null;
+}
+
 /**
  * Schools whose Bangla or English name contains the query, never merged ones. An empty query
  * returns the newest Schools. Results are cached in KV for a short TTL;

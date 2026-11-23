@@ -155,4 +155,24 @@ describe("Feed (GET /feed)", () => {
       "থাকবে",
     ]);
   });
+
+  it("shows a Story published through /write at the top immediately, past a warm cache", async () => {
+    const { cookie } = await signInAs();
+    await createStory({ title: "আগের গল্প" });
+    await get("/feed", cookie); // warm the cache
+    const res = await exports.default.fetch(`${ORIGIN}/write`, {
+      method: "POST",
+      headers: { cookie },
+      body: new URLSearchParams({
+        title: "সদ্য লেখা",
+        body: "একটু লেখা।",
+        schoolName: "রূপনগর হাই স্কুল",
+      }),
+      redirect: "manual",
+    });
+    expect(res.status).toBe(302);
+    expect(titlesIn(await (await get("/feed", cookie)).text())[0]).toBe(
+      "সদ্য লেখা",
+    );
+  });
 });

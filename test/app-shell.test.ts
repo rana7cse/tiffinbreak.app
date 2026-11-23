@@ -29,14 +29,6 @@ describe("signed-in app shell", () => {
     expect(html).toContain("tb-app tb-app--with-nav");
   });
 
-  it("renders the bottom nav on /write with Write marked active", async () => {
-    const { cookie } = await signInAs();
-    const html = await getHtml("/write", cookie);
-
-    expect(navItem(html, "/write")).toContain('aria-current="page"');
-    expect(navItem(html, "/feed")).not.toContain("aria-current");
-  });
-
   it("shows the Writer's avatar in the header, linking to the profile", async () => {
     const { cookie } = await signInAs({ name: "রাফি" });
     const html = await getHtml("/feed", cookie);
