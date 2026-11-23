@@ -126,6 +126,39 @@ describe("Edit profile (/profile/edit)", () => {
     }
   });
 
+  it("deletes the old avatar object when it is replaced", async () => {
+    const { cookie, writer } = await writerWithHandle("avatar_gc");
+    const oldKey = `covers/${"a".repeat(32)}.png`;
+    await env.COVERS.put(oldKey, new Uint8Array([1]));
+    await env.DB.prepare("UPDATE user SET image = ? WHERE id = ?")
+      .bind(`/${oldKey}`, writer.id)
+      .run();
+    const res = await save(cookie, {
+      name: "Rafi Ahmed",
+      handle: "avatar_gc",
+      avatar: new File([new Uint8Array([2])], "a.png", { type: "image/png" }),
+    });
+    expect(res.status).toBe(302);
+    expect(await env.COVERS.get(oldKey)).toBeNull();
+    const { image } = (await row(writer.id)) as { image: string };
+    expect(await env.COVERS.get(image.slice(1))).not.toBeNull();
+  });
+
+  it("keeps a Google avatar URL untouched when replaced (nothing of ours to delete)", async () => {
+    const { cookie, writer } = await signInAs({
+      image: "https://lh3.googleusercontent.com/a/x",
+    });
+    await env.DB.prepare("UPDATE user SET handle = ? WHERE id = ?")
+      .bind("avatar_google", writer.id)
+      .run();
+    const res = await save(cookie, {
+      name: "Rafi",
+      handle: "avatar_google",
+      avatar: new File([new Uint8Array([2])], "a.png", { type: "image/png" }),
+    });
+    expect(res.status).toBe(302);
+  });
+
   it("rejects a non-image avatar and keeps the old one", async () => {
     const { cookie, writer } = await writerWithHandle("avatar_bad");
     const res = await save(cookie, {

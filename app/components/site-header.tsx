@@ -25,7 +25,12 @@ export function SiteHeader({ writer, brandHref }: SiteHeaderProps) {
               {strings.nav.logout}
             </button>
           </form>
-          <Avatar name={writer.name} image={writer.image} />
+          <Avatar
+            name={writer.name}
+            image={writer.image}
+            size="header"
+            variant="pink"
+          />
         </div>
       ) : (
         <a className="tb-btn tb-btn--pill" href="/login">

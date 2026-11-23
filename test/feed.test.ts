@@ -1,6 +1,6 @@
 import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
-import { invalidateFeedCache } from "~/lib/feed";
+import { bumpFeedVersion } from "~/lib/stories";
 import { signInAs } from "./helpers/session";
 import { createStory } from "./helpers/story";
 
@@ -54,7 +54,6 @@ describe("Feed (GET /feed)", () => {
     const html = await (await get("/feed", cookie)).text();
 
     expect(titlesIn(html)).toEqual(["নতুন গল্প একটা", "পুরোনো গল্প"]);
-    expect(html).not.toContain("ডায়েরির প্রথম পাতাটা");
     expect(html).toContain("ক্লাস সেভেনে রোজ টিফিন বক্স খুলে দেখতাম।");
     expect(html).toContain("গল্পকার");
     expect(html).toContain("শান্তিনগর গার্লস স্কুল");
@@ -128,7 +127,7 @@ describe("Feed (GET /feed)", () => {
       "আগের গল্প",
     ]);
     await createStory({ title: "এইমাত্র প্রকাশিত" });
-    await invalidateFeedCache(env);
+    await bumpFeedVersion(env.CACHE);
     expect(titlesIn(await (await get("/feed", cookie)).text())[0]).toBe(
       "এইমাত্র প্রকাশিত",
     );

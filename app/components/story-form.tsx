@@ -89,6 +89,7 @@ export function StoryForm({
       }}
     >
       <input type="hidden" name="schoolId" value={school?.id ?? ""} />
+      <input type="hidden" name="schoolName" value={school?.name ?? ""} />
       {removeExisting ? (
         <input type="hidden" name="removeCover" value="1" />
       ) : null}
@@ -135,7 +136,7 @@ export function StoryForm({
           className="tb-dropzone"
           onClick={() => coverInput.current?.click()}
         >
-          <ImageIcon size={24} color="#4F5A54" />
+          <ImageIcon size={24} color="var(--tb-muted)" />
           {t.coverPick}
         </button>
       )}
@@ -178,7 +179,7 @@ export function StoryForm({
           color: "var(--tb-muted)",
         }}
       >
-        <SchoolIcon size={16} color="#4F5A54" />
+        <SchoolIcon size={16} color="var(--tb-muted)" />
         {school ? (
           <>
             {school.name} ·{" "}

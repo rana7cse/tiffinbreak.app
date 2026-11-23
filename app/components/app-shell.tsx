@@ -16,7 +16,12 @@ export function AppHeader({ writer }: { writer: Writer }) {
         <span className="tb-brand__name">{strings.brand.name}</span>
       </a>
       <a href="/profile" aria-label={t.myProfile}>
-        <Avatar name={writer.name} image={writer.image} />
+        <Avatar
+          name={writer.name}
+          image={writer.image}
+          size="header"
+          variant="pink"
+        />
       </a>
     </header>
   );
@@ -32,8 +37,8 @@ export function BottomNav({ active }: { active: NavTab | null }) {
     <nav className="tb-bottom-nav" aria-label={t.label}>
       <a className="tb-bottom-nav__item" href="/feed" {...current("home")}>
         <HomeIcon
-          color={active === "home" ? "#1E2A25" : "#4F5A54"}
-          fill={active === "home" ? "#FFE9A8" : "none"}
+          color={active === "home" ? "var(--tb-ink)" : "var(--tb-muted)"}
+          fill={active === "home" ? "var(--tb-yellow-soft)" : "none"}
         />
         {t.home}
       </a>
@@ -53,8 +58,8 @@ export function BottomNav({ active }: { active: NavTab | null }) {
         {...current("profile")}
       >
         <UserIcon
-          color={active === "profile" ? "#1E2A25" : "#4F5A54"}
-          fill={active === "profile" ? "#FFE9A8" : "none"}
+          color={active === "profile" ? "var(--tb-ink)" : "var(--tb-muted)"}
+          fill={active === "profile" ? "var(--tb-yellow-soft)" : "none"}
         />
         {t.profile}
       </a>

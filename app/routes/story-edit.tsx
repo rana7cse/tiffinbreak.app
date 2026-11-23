@@ -36,11 +36,10 @@ async function loadOwnStory(args: {
   const { user } = await requireWriter(args);
   const { env } = args.context.get(cloudflareContext);
   const found = await getStoryById(env, args.id);
-  const reader = user as { id: string; role?: string };
-  if (!found || !canReadStory(found, reader)) {
+  if (!found || !canReadStory(found, user)) {
     throw new Response("Not Found", { status: 404 });
   }
-  if (!canEditStory(found, reader)) {
+  if (!canEditStory(found, user)) {
     throw new Response("Forbidden", { status: 403 });
   }
   return { env, found, user };
@@ -110,7 +109,7 @@ export default function EditStory({
           href={`/stories/${loaderData.id}`}
           aria-label={strings.common.close}
         >
-          <CloseIcon size={22} color="#1E2A25" />
+          <CloseIcon size={22} color="var(--tb-ink)" />
         </a>
         <span className="tb-header__title">{t.editTitle}</span>
         <button

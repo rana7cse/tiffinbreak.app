@@ -45,7 +45,7 @@ export async function findOrCreateSchool(
     .onConflictDoNothing()
     .returning({ id: school.id, name: school.name });
   if (inserted[0]) {
-    await bumpVersion(env.CACHE);
+    await bumpSchoolSuggestVersion(env.CACHE);
     return inserted[0];
   }
   return (await find()) ?? null;
@@ -119,7 +119,7 @@ async function readVersion(cache: KVNamespace): Promise<string> {
   }
 }
 
-export async function bumpVersion(cache: KVNamespace) {
+export async function bumpSchoolSuggestVersion(cache: KVNamespace) {
   try {
     await cache.put(VERSION_KEY, crypto.randomUUID());
   } catch (error) {

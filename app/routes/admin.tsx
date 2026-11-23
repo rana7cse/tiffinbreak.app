@@ -68,7 +68,7 @@ export default function AdminReview({ loaderData }: Route.ComponentProps) {
           href="/feed"
           aria-label={strings.nav.backToFeed}
         >
-          <BackIcon size={22} color="#1E2A25" />
+          <BackIcon size={22} color="var(--tb-ink)" />
         </a>
         <span className="tb-header__title">{t.title}</span>
         <span style={{ width: 44 }} />

@@ -5,7 +5,13 @@ import { Avatar } from "~/components/avatar";
 import { BackIcon } from "~/components/icons";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
-import { COVER_MAX_BYTES, storeCover, validateCover } from "~/lib/cover";
+import {
+  COVER_MAX_BYTES,
+  deleteCover,
+  ownCoverKey,
+  storeCover,
+  validateCover,
+} from "~/lib/cover";
 import {
   cleanHandle,
   HANDLE_MAX,
@@ -16,7 +22,12 @@ import {
 import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { handleTaken, updateWriterProfile } from "~/lib/writers";
+import { coverUrl } from "~/lib/story-share";
+import {
+  getWriterImage,
+  handleTaken,
+  updateWriterProfile,
+} from "~/lib/writers";
 import { strings } from "~/strings";
 import type { Route } from "./+types/profile-edit";
 
@@ -102,13 +113,26 @@ export async function action({ request, context }: Route.ActionArgs) {
     );
   }
 
-  const image = avatar ? `/${await storeCover(env, avatar)}` : undefined;
-  const saved = await updateWriterProfile(env, me.id, {
-    name,
-    handle: handleInput,
-    image,
-  });
-  if (!saved) return failed({ handle: t.errors.handleTaken });
+  const newKey = avatar ? await storeCover(env, avatar) : null;
+  const oldImage = newKey ? await getWriterImage(env, me.id) : null;
+  let saved = false;
+  try {
+    saved = await updateWriterProfile(env, me.id, {
+      name,
+      handle: handleInput,
+      image: coverUrl("", newKey) ?? undefined,
+    });
+  } catch (error) {
+    await deleteCover(env, newKey);
+    throw error;
+  }
+  if (!saved) {
+    await deleteCover(env, newKey);
+    return failed({ handle: t.errors.handleTaken });
+  }
+  // The replaced avatar is ours only if it is a stored cover, never a
+  // Google or Facebook photo URL.
+  await deleteCover(env, ownCoverKey(oldImage));
   return redirect(`/writers/${handleInput}`);
 }
 
@@ -130,7 +154,7 @@ export default function EditProfile({
           href={`/writers/${loaderData.handle}`}
           aria-label={t.cancel}
         >
-          <BackIcon size={22} color="#1E2A25" />
+          <BackIcon size={22} color="var(--tb-ink)" />
         </a>
         <span className="tb-header__title">{t.title}</span>
         <span style={{ width: 44 }} />
@@ -151,7 +175,7 @@ export default function EditProfile({
           <Avatar
             name={values.name}
             image={preview ?? loaderData.image}
-            large
+            size="lg"
           />
           <button
             type="button"

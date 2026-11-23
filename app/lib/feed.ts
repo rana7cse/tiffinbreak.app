@@ -1,14 +1,7 @@
 import { and, count, desc, eq, lt, or } from "drizzle-orm";
 import { getDb } from "~/db";
 import { school, story, user } from "~/db/schema";
-import { strings } from "~/strings";
-import { bn } from "./bangla-digits";
-import {
-  bumpFeedVersion,
-  formatStoryDate,
-  readFeedVersion,
-  visibleStory,
-} from "./stories";
+import { readFeedVersion, visibleStory } from "./stories";
 
 export const FEED_PAGE_SIZE = 10;
 const EXCERPT_LENGTH = 110;
@@ -80,6 +73,19 @@ export async function countSchoolStories(
     .select({ n: count() })
     .from(story)
     .where(and(visibleStory, eq(story.schoolId, schoolId)))
+    .get();
+  return row?.n ?? 0;
+}
+
+/** How many Stories (hidden ones too) a Writer has written. */
+export async function countWriterStories(
+  env: Pick<Env, "DB">,
+  writerId: string,
+): Promise<number> {
+  const row = await getDb(env.DB)
+    .select({ n: count() })
+    .from(story)
+    .where(eq(story.writerId, writerId))
     .get();
   return row?.n ?? 0;
 }
@@ -165,34 +171,4 @@ async function listFirstPage(
     console.error("feed: cache write failed", error);
   }
   return page;
-}
-
-/**
- * Call after anything that changes the first Feed page: publish, edit,
- * delete, hide/restore, School merge.
- */
-export async function invalidateFeedCache(
-  env: Pick<Env, "CACHE">,
-): Promise<void> {
-  await bumpFeedVersion(env.CACHE);
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
-
-/**
- * "২ ঘণ্টা আগে", "গতকাল", "৩ দিন আগে"; a plain date from a week on.
- * Days are counted on the Bangladesh calendar.
- */
-export function relativeTime(createdAt: number, now = Date.now()): string {
-  const t = strings.feed.time;
-  const diff = Math.max(0, now - createdAt);
-  if (diff < 60_000) return t.justNow;
-  if (diff < 3_600_000) return t.minutesAgo(bn(Math.floor(diff / 60_000)));
-  if (diff < DAY_MS) return t.hoursAgo(bn(Math.floor(diff / 3_600_000)));
-  const day = (ms: number) => Math.floor((ms + DHAKA_OFFSET_MS) / DAY_MS);
-  const days = day(now) - day(createdAt);
-  if (days <= 1) return t.yesterday;
-  if (days < 7) return t.daysAgo(bn(days));
-  return formatStoryDate(new Date(createdAt));
 }
