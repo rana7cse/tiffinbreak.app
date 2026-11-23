@@ -6,6 +6,7 @@ export default [
   route("login/:provider", "routes/login-provider.ts"),
   route("logout", "routes/logout.ts"),
   route("feed", "routes/feed.tsx"),
+  route("write", "routes/write.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("data-deletion", "routes/data-deletion.tsx"),
   route("health", "routes/health.ts"),

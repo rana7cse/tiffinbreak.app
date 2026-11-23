@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 import { PenIcon } from "~/components/icons";
 import {
   BellIcon,
-  BrandMark,
   FacebookIcon,
   GoogleIcon,
   LunchBox,
@@ -12,7 +11,9 @@ import {
   StarDeco,
   WordUnderline,
 } from "~/components/landing-art";
+import { SiteHeader } from "~/components/site-header";
 import { bn } from "~/lib/bangla-digits";
+import { getWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import { strings } from "~/strings";
 import type { Route } from "./+types/home";
@@ -73,18 +74,20 @@ const noteStyles: readonly NoteStyle[] = [
 
 const stepColors = ["yellow", "mint", "pink"] as const;
 
-export default function Home() {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const session = await getWriter({ request, context });
+  return {
+    writer: session
+      ? { name: session.user.name, image: session.user.image }
+      : null,
+  };
+}
+
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const { writer } = loaderData;
   return (
     <>
-      <header className="tb-header">
-        <a className="tb-brand" href="/">
-          <BrandMark />
-          <span className="tb-brand__name">{strings.brand.name}</span>
-        </a>
-        <a className="tb-btn tb-btn--pill" href="/login">
-          {strings.nav.login}
-        </a>
-      </header>
+      <SiteHeader writer={writer} brandHref="/" />
 
       <section className="tb-board">
         <StarDeco
@@ -121,34 +124,46 @@ export default function Home() {
         <p className="tb-board__text tb-rise3">{t.lead}</p>
 
         <div className="tb-stack tb-rise4" style={{ gap: 12, marginTop: 22 }}>
-          <form
-            method="post"
-            action="/login/facebook"
-            style={{ display: "contents" }}
-          >
-            <input type="hidden" name="returnTo" value="/feed" />
-            <button
-              type="submit"
-              className="tb-btn tb-btn--facebook tb-btn--lg tb-btn--block tb-btn--on-board"
+          {writer ? (
+            <a
+              className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
+              href="/write"
             >
-              <FacebookIcon />
-              {strings.login.withFacebook}
-            </button>
-          </form>
-          <form
-            method="post"
-            action="/login/google"
-            style={{ display: "contents" }}
-          >
-            <input type="hidden" name="returnTo" value="/feed" />
-            <button
-              type="submit"
-              className="tb-btn tb-btn--lg tb-btn--block tb-btn--on-board"
-            >
-              <GoogleIcon />
-              {strings.login.withGoogle}
-            </button>
-          </form>
+              <PenIcon size={20} color="#FFFFFF" />
+              {t.startWriting}
+            </a>
+          ) : (
+            <>
+              <form
+                method="post"
+                action="/login/facebook"
+                style={{ display: "contents" }}
+              >
+                <input type="hidden" name="returnTo" value="/feed" />
+                <button
+                  type="submit"
+                  className="tb-btn tb-btn--facebook tb-btn--lg tb-btn--block tb-btn--on-board"
+                >
+                  <FacebookIcon />
+                  {strings.login.withFacebook}
+                </button>
+              </form>
+              <form
+                method="post"
+                action="/login/google"
+                style={{ display: "contents" }}
+              >
+                <input type="hidden" name="returnTo" value="/feed" />
+                <button
+                  type="submit"
+                  className="tb-btn tb-btn--lg tb-btn--block tb-btn--on-board"
+                >
+                  <GoogleIcon />
+                  {strings.login.withGoogle}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </section>
 
@@ -241,7 +256,7 @@ export default function Home() {
         </p>
         <a
           className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
-          href="/login?intent=write"
+          href={writer ? "/write" : "/login?intent=write"}
         >
           <PenIcon size={20} color="#FFFFFF" />
           {t.ctaButton}

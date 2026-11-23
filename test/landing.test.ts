@@ -1,5 +1,6 @@
 import { exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
+import { signInAs } from "./helpers/session";
 
 async function getHtml(path: string) {
   const res = await exports.default.fetch(`http://example.com${path}`);
@@ -71,6 +72,67 @@ describe("landing page", () => {
     expect(bottom).toMatch(/<a [^>]*tb-btn[^>]*href="\/login\?intent=write"/);
     expect(bottom).not.toContain('action="/login/google"');
     expect(bottom).not.toContain('action="/login/facebook"');
+  });
+});
+
+describe("landing page when signed in", () => {
+  const cta = "গল্প লেখা শুরু করো";
+  const getAs = async (opts: { name: string; image?: string }) => {
+    const { cookie } = await signInAs(opts);
+    const res = await exports.default.fetch("http://example.com/", {
+      headers: { cookie },
+    });
+    return res.text();
+  };
+
+  it("shows the photo in the header avatar", async () => {
+    const html = await getAs({
+      name: "Rafi Ahmed",
+      image: "https://example.com/rafi.jpg",
+    });
+
+    expect(html).toMatch(/<img [^>]*src="https:\/\/example.com\/rafi.jpg"/);
+  });
+
+  it("shows the first letter of the name without a photo", async () => {
+    const html = await getAs({ name: "Rafi Ahmed" });
+
+    expect(html).toMatch(/tb-avatar[^>]*>R<\/span>/);
+  });
+
+  it("keeps logout reachable and drops the login pill", async () => {
+    const html = await getAs({ name: "Rafi Ahmed" });
+
+    expect(html).toContain('action="/logout"');
+    expect(html).not.toMatch(/<a [^>]*href="\/login"/);
+  });
+
+  it("replaces the login buttons with a write CTA to /write", async () => {
+    const html = await getAs({ name: "Rafi Ahmed" });
+    const top = html.slice(0, html.indexOf('id="how"'));
+
+    expect(top).toMatch(
+      new RegExp(`<a [^>]*href="/write"[^>]*>.*?${cta}`, "s"),
+    );
+    expect(html).not.toContain('action="/login/google"');
+    expect(html).not.toContain('action="/login/facebook"');
+  });
+
+  it("points the bottom CTA at /write too", async () => {
+    const html = await getAs({ name: "Rafi Ahmed" });
+    const bottom = html.slice(html.indexOf('id="how"'));
+
+    expect(bottom).toMatch(/<a [^>]*tb-btn[^>]*href="\/write"/);
+    expect(bottom).not.toContain("/login?intent=write");
+  });
+});
+
+describe("landing page when signed out", () => {
+  it("has no avatar and no write CTA", async () => {
+    const { html } = await getHtml("/");
+
+    expect(html).not.toContain("tb-avatar");
+    expect(html).not.toContain('href="/write"');
   });
 });
 
