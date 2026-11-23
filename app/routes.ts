@@ -13,6 +13,7 @@ export default [
   route("stories/:id/love", "routes/story-love.ts"),
   route("covers/:name", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),
+  route("profile/edit", "routes/profile-edit.tsx"),
   route("writers/:handle", "routes/writer.tsx"),
   route("admin", "routes/admin.tsx"),
   route("privacy", "routes/privacy.tsx"),

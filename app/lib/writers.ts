@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { getDb } from "~/db";
 import { school, story, user } from "~/db/schema";
 import { visibleStory } from "./stories";
@@ -22,6 +22,47 @@ export type WriterProfile = {
   loveTotal: number;
   stories: ProfileStory[];
 };
+
+/** True when another Writer already uses `handle`. */
+export async function handleTaken(
+  env: Pick<Env, "DB">,
+  handle: string,
+  exceptId: string,
+): Promise<boolean> {
+  const hit = await getDb(env.DB)
+    .select({ id: user.id })
+    .from(user)
+    .where(and(eq(user.handle, handle), ne(user.id, exceptId)))
+    .get();
+  return !!hit;
+}
+
+/**
+ * Saves a Writer's name, handle and (when given) avatar URL. Returns false
+ * when the handle was taken in the meantime (unique constraint).
+ */
+export async function updateWriterProfile(
+  env: Pick<Env, "DB">,
+  id: string,
+  fields: { name: string; handle: string; image?: string },
+): Promise<boolean> {
+  try {
+    await getDb(env.DB)
+      .update(user)
+      .set({
+        name: fields.name,
+        handle: fields.handle,
+        ...(fields.image ? { image: fields.image } : {}),
+      })
+      .where(eq(user.id, id));
+    return true;
+  } catch (e) {
+    if (/UNIQUE|constraint/i.test(String(e) + String((e as Error).cause))) {
+      return false;
+    }
+    throw e;
+  }
+}
 
 /**
  * A Writer's public profile by @handle, or null when there is none. Hidden

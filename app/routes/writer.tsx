@@ -156,6 +156,16 @@ export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
         )}
 
         {p.own ? (
+          <a
+            className="tb-btn tb-btn--pill"
+            href="/profile/edit"
+            style={{ marginTop: 32 }}
+          >
+            {t.editProfile}
+          </a>
+        ) : null}
+
+        {p.own ? (
           <form method="post" action="/logout" style={{ marginTop: 32 }}>
             <button className="tb-btn tb-btn--pill" type="submit">
               {strings.nav.logout}
