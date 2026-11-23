@@ -111,6 +111,51 @@ describe("Writer profile (GET /writers/:handle)", () => {
     const html = await (await get(`/writers/${handle}`, cookie)).text();
     expect(html).toContain('action="/logout"');
   });
+
+  it("puts an edit link beside the name on the own profile only", async () => {
+    const { writer, cookie } = await createStory();
+    const handle = await handleOf(writer?.id as string);
+    const own = await (await get(`/writers/${handle}`, cookie)).text();
+    expect(own).toContain('href="/profile/edit"');
+    expect(own).toContain("প্রোফাইল এডিট করো");
+    // beside the name, above the stats (not a pill further down)
+    expect(own.indexOf('href="/profile/edit"')).toBeLessThan(
+      own.indexOf("tb-stats"),
+    );
+
+    const { cookie: other } = await signInAs();
+    const theirs = await (await get(`/writers/${handle}`, other)).text();
+    expect(theirs).not.toContain('href="/profile/edit"');
+  });
+
+  it("keeps logout after the stories section", async () => {
+    const { writer, cookie } = await createStory({ title: "একটা গল্প" });
+    const handle = await handleOf(writer?.id as string);
+    const html = await (await get(`/writers/${handle}`, cookie)).text();
+    expect(html.indexOf("একটা গল্প")).toBeLessThan(
+      html.indexOf('action="/logout"'),
+    );
+  });
+
+  it("invites the own Writer with no Stories to write one", async () => {
+    const { cookie, writer } = await signInAs();
+    const handle = await handleOf(writer.id);
+    const html = await (await get(`/writers/${handle}`, cookie)).text();
+    expect(html).toContain("তোমার এখনো কোনো গল্প নেই");
+    expect(html).toContain("গল্প লিখি");
+    expect(html).toContain('href="/write"');
+    expect(html).toContain('action="/logout"');
+  });
+
+  it("shows plain text and no CTA on another Writer's empty profile", async () => {
+    const { writer } = await signInAs();
+    const handle = await handleOf(writer.id);
+    const { cookie: reader } = await signInAs();
+    const html = await (await get(`/writers/${handle}`, reader)).text();
+    expect(html).toContain("এখনো কোনো গল্প নেই।");
+    expect(html).not.toContain("গল্প লিখি");
+    expect(html).not.toContain("তোমার এখনো কোনো গল্প নেই");
+  });
 });
 
 describe("/profile", () => {
