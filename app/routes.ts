@@ -14,6 +14,7 @@ export default [
   route("covers/:name", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),
   route("writers/:handle", "routes/writer.tsx"),
+  route("admin", "routes/admin.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("data-deletion", "routes/data-deletion.tsx"),
   route("health", "routes/health.ts"),

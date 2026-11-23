@@ -240,6 +240,20 @@ export const strings = {
     done: "রিপোর্ট করা হয়েছে",
   },
 
+  admin: {
+    title: "অ্যাডমিন রিভিউ",
+    lead: "রিপোর্ট হওয়া আর লুকানো গল্পগুলো এখানে।",
+    empty: "রিভিউ করার মতো কোনো গল্প নেই।",
+    hidden: "লুকানো",
+    reports: "রিপোর্ট",
+    noReason: "কারণ লেখা হয়নি",
+    reasonsTitle: "রিপোর্টের কারণ",
+    restore: "ফিরিয়ে দাও",
+    remove: "মুছে ফেলো",
+    removeConfirm: "গল্পটা চিরতরে মুছে যাবে। নিশ্চিত?",
+    by: (name: string) => `লিখেছে ${name}`,
+  },
+
   common: {
     close: "বন্ধ করো",
     back: "ফিরে যাও",

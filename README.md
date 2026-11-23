@@ -264,6 +264,19 @@ as an extra Custom Domain or be removed from `routes`):
    `https://tiffinbreak.app/privacy` and the data deletion URL to
    `https://tiffinbreak.app/data-deletion`.
 
+## Promoting the first Admin
+
+Everyone starts as a `writer`. The Admin review page (`/admin`) is only for
+`admin`s, and there is no UI to promote someone. After the person has signed in
+once, run this one-off command against production D1 (swap in their email):
+
+```bash
+npx wrangler d1 execute tiffinbreak --remote \
+  --command "UPDATE user SET role = 'admin' WHERE email = 'you@example.com'"
+```
+
+They may need to sign out and in again for the change to show.
+
 ## Tests
 
 Tests run inside the real Workers runtime using
