@@ -57,6 +57,13 @@
       "when": 1795473787443,
       "tag": "0007_gorgeous_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795474448555,
+      "tag": "0008_dark_deathstrike",
+      "breakpoints": true
     }
   ]
 }

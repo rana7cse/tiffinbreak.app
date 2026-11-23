@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { asc, desc, eq, or, sql } from "drizzle-orm";
 import { getDb } from "~/db";
 import { school } from "~/db/schema";
 import { normalizeSchoolName } from "./school-name";
@@ -26,17 +26,22 @@ export async function findOrCreateSchool(
     db
       .select({ id: school.id, name: school.name })
       .from(school)
-      .where(and(eq(school.normalizedName, name), isNull(school.mergedIntoId)))
+      .where(
+        or(
+          eq(school.name, name),
+          sql`lower(${school.nameEn}) = ${name.toLowerCase()}`,
+        ),
+      )
       .get();
 
   const existing = await find();
   if (existing) return existing;
 
-  // The partial unique index settles races: the loser inserts nothing and
+  // The unique name index settles races: the loser inserts nothing and
   // re-reads the winner's row.
   const inserted = await db
     .insert(school)
-    .values({ id: crypto.randomUUID(), name, normalizedName: name })
+    .values({ id: crypto.randomUUID(), name })
     .onConflictDoNothing()
     .returning({ id: school.id, name: school.name });
   if (inserted[0]) {
@@ -46,7 +51,7 @@ export async function findOrCreateSchool(
   return (await find()) ?? null;
 }
 
-/** A School by id, or null when it does not exist or was merged away. */
+/** A School by id, or null when it does not exist. */
 export async function findSchoolById(
   env: Pick<Env, "DB">,
   id: string,
@@ -54,13 +59,13 @@ export async function findSchoolById(
   const row = await getDb(env.DB)
     .select({ id: school.id, name: school.name })
     .from(school)
-    .where(and(eq(school.id, id), isNull(school.mergedIntoId)))
+    .where(eq(school.id, id))
     .get();
   return row ?? null;
 }
 
 /**
- * Schools whose Bangla or English name contains the query, never merged ones. An empty query
+ * Schools whose Bangla or English name contains the query. An empty query
  * returns the newest Schools. Results are cached in KV for a short TTL;
  * every failure of the cache falls back to D1, so correctness never depends
  * on it.
@@ -88,12 +93,9 @@ export async function suggestSchools(
     .select({ id: school.id, name: school.name })
     .from(school)
     .where(
-      and(
-        isNull(school.mergedIntoId),
-        q
-          ? sql`(${school.normalizedName} like ${pattern} escape '\\' or lower(${school.nameEn}) like ${patternEn} escape '\\')`
-          : undefined,
-      ),
+      q
+        ? sql`(${school.name} like ${pattern} escape '\\' or lower(${school.nameEn}) like ${patternEn} escape '\\')`
+        : undefined,
     )
     .orderBy(q ? asc(school.name) : desc(school.createdAt))
     .limit(SUGGESTION_LIMIT);
@@ -117,7 +119,7 @@ async function readVersion(cache: KVNamespace): Promise<string> {
   }
 }
 
-async function bumpVersion(cache: KVNamespace) {
+export async function bumpVersion(cache: KVNamespace) {
   try {
     await cache.put(VERSION_KEY, crypto.randomUUID());
   } catch (error) {

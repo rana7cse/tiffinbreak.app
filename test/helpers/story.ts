@@ -32,10 +32,8 @@ export async function createStory(opts: StoryOptions = {}) {
   const schoolId = opts.schoolId ?? crypto.randomUUID();
   const schoolName = opts.schoolName ?? `রূপনগর হাই স্কুল ${schoolId}`;
   if (!opts.schoolId) {
-    await env.DB.prepare(
-      "INSERT INTO school (id, name, normalized_name) VALUES (?, ?, ?)",
-    )
-      .bind(schoolId, schoolName, schoolName)
+    await env.DB.prepare("INSERT INTO school (id, name) VALUES (?, ?)")
+      .bind(schoolId, schoolName)
       .run();
   }
 
