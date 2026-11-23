@@ -42,6 +42,38 @@ describe("landing page", () => {
     expect(html).toMatch(/<input [^>]*name="returnTo"/);
     expect(html).toContain('value="/feed"');
   });
+
+  it("has a Google form with returnTo=/feed in the top section", async () => {
+    const { html } = await getHtml("/");
+    const top = html.slice(0, html.indexOf('id="how"'));
+
+    expect(top).toMatch(
+      /<form [^>]*action="\/login\/google"[^>]*>(?:(?!<\/form>).)*name="returnTo"[^>]*value="\/feed"/s,
+    );
+    expect(top).toMatch(
+      /<form [^>]*action="\/login\/facebook"[^>]*>(?:(?!<\/form>).)*name="returnTo"[^>]*value="\/feed"/s,
+    );
+  });
+
+  it("has no look-around link and Facebook comes before Google", async () => {
+    const { html } = await getHtml("/");
+
+    expect(html).not.toContain('href="#how"');
+    expect(html.indexOf('action="/login/facebook"')).toBeLessThan(
+      html.indexOf('action="/login/google"'),
+    );
+  });
+
+  it("bottom call-to-action links to /login and posts to no provider", async () => {
+    const { html } = await getHtml("/");
+    const bottom = html.slice(html.indexOf('id="how"'));
+
+    expect(bottom).toMatch(
+      /<a [^>]*href="\/login"[^>]*tb-btn|<a [^>]*tb-btn[^>]*href="\/login"/,
+    );
+    expect(bottom).not.toContain('action="/login/google"');
+    expect(bottom).not.toContain('action="/login/facebook"');
+  });
 });
 
 describe("GET /login", () => {

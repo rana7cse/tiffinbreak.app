@@ -4,6 +4,7 @@ import {
   BellIcon,
   BrandMark,
   FacebookIcon,
+  GoogleIcon,
   LunchBox,
   PaperClip,
   PaperPlane,
@@ -131,16 +132,23 @@ export default function Home() {
               className="tb-btn tb-btn--facebook tb-btn--lg tb-btn--block tb-btn--on-board"
             >
               <FacebookIcon />
-              {t.loginToStart}
+              {strings.login.withFacebook}
             </button>
           </form>
-          <a
-            className="tb-link"
-            href="#how"
-            style={{ alignSelf: "center", color: "var(--tb-chalk-2)" }}
+          <form
+            method="post"
+            action="/login/google"
+            style={{ display: "contents" }}
           >
-            {t.lookAround}
-          </a>
+            <input type="hidden" name="returnTo" value="/feed" />
+            <button
+              type="submit"
+              className="tb-btn tb-btn--lg tb-btn--block tb-btn--on-board"
+            >
+              <GoogleIcon />
+              {strings.login.withGoogle}
+            </button>
+          </form>
         </div>
       </section>
 
@@ -231,16 +239,13 @@ export default function Home() {
         <p className="tb-board__text" style={{ margin: "10px 0 22px" }}>
           {t.ctaText}
         </p>
-        <form method="post" action="/login/google">
-          <input type="hidden" name="returnTo" value="/feed" />
-          <button
-            className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
-            type="submit"
-          >
-            <PenIcon size={20} color="#FFFFFF" />
-            {t.ctaButton}
-          </button>
-        </form>
+        <a
+          className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
+          href="/login"
+        >
+          <PenIcon size={20} color="#FFFFFF" />
+          {t.ctaButton}
+        </a>
       </section>
 
       <footer className="tb-footer">
