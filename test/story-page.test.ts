@@ -10,11 +10,69 @@ const get = (id: string, cookie?: string) =>
   });
 
 describe("Story page (GET /stories/:id)", () => {
-  it("is login-walled", async () => {
-    const { story } = await createStory();
-    const res = await get(story.id);
-    expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toContain("/login?returnTo=");
+  describe("logged out (ADR-0001 share preview)", () => {
+    it("serves the login page with OG/Twitter tags and no body text", async () => {
+      const { story } = await createStory({
+        title: "টিফিনের পরোটা",
+        body: "গোপন অনুচ্ছেদ একটাই।",
+        coverKey: "covers/abc.jpg",
+      });
+      const res = await get(story.id);
+      expect(res.status).toBe(200);
+      const html = await res.text();
+
+      expect(html).toContain('property="og:title" content="টিফিনের পরোটা"');
+      expect(html).toContain(
+        'property="og:image" content="http://example.com/covers/abc.jpg"',
+      );
+      expect(html).toContain(
+        `property="og:url" content="http://example.com/stories/${story.id}"`,
+      );
+      expect(html).toContain('name="twitter:card"');
+      expect(html).toContain('name="twitter:title" content="টিফিনের পরোটা"');
+      expect(html).toContain("গল্পকার"); // Writer's first name
+      expect(html).not.toContain("গোপন অনুচ্ছেদ");
+      // It is the login page, and login returns to the Story.
+      expect(html).toContain("/login/google");
+      expect(html).toContain(`value="/stories/${story.id}"`);
+    });
+
+    it("redirects a logged-out POST to login", async () => {
+      const { story } = await createStory();
+      const res = await exports.default.fetch(
+        `http://example.com/stories/${story.id}`,
+        {
+          method: "POST",
+          body: new URLSearchParams({ intent: "report" }),
+          redirect: "manual",
+        },
+      );
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toContain("/login?returnTo=");
+    });
+
+    it("omits og:image when the Story has no cover", async () => {
+      const { story } = await createStory();
+      const html = await (await get(story.id)).text();
+      expect(html).toContain('property="og:title"');
+      expect(html).not.toContain("og:image");
+    });
+
+    it("leaks nothing for hidden or unknown Stories", async () => {
+      const { story } = await createStory({ hidden: true });
+      for (const id of [story.id, "nope"]) {
+        const res = await get(id);
+        expect(res.status).toBe(302);
+        expect(res.headers.get("location")).toContain("/login?returnTo=");
+      }
+    });
+  });
+
+  it("logged-in Story page has no share-preview tags and a share button", async () => {
+    const { story, cookie } = await createStory();
+    const html = await (await get(story.id, cookie)).text();
+    expect(html).not.toContain("og:title");
+    expect(html).toContain("বন্ধুদের পাঠাও");
   });
 
   it("renders title, body, Writer, School, date and reading time", async () => {

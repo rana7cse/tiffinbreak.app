@@ -6,6 +6,7 @@ import { bn } from "~/lib/bangla-digits";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import { formatStoryDate } from "~/lib/stories";
+import { coverUrl } from "~/lib/story-share";
 import { getWriterProfile } from "~/lib/writers";
 import { strings } from "~/strings";
 import type { Route } from "./+types/writer";
@@ -45,9 +46,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   };
 }
 
-/** Where a Story's cover photo is served from (one place to change). */
-const coverUrl = (key: string) => `/${key}`;
-
 // theme/profile.html `<StoryRow />`; swap for the Feed's card when it lands.
 function StoryRow({
   s,
@@ -61,7 +59,7 @@ function StoryRow({
         style={
           s.coverKey
             ? {
-                backgroundImage: `url(${coverUrl(s.coverKey)})`,
+                backgroundImage: `url(${coverUrl("", s.coverKey)})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
