@@ -223,3 +223,101 @@ describe("Facebook sign-in", () => {
     });
   });
 });
+
+describe("account linking", () => {
+  it.each([
+    ["facebook", "google"],
+    ["google", "facebook"],
+  ] as const)(
+    "%s first, then %s with the same email signs into the same Writer",
+    async (first, second) => {
+      const email = `${first}-then-${second}@example.com`;
+      const realFetch = globalThis.fetch;
+      vi.stubGlobal(
+        "fetch",
+        async (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = new Request(input, init).url;
+          if (url.startsWith("https://oauth2.googleapis.com/token")) {
+            return Response.json({
+              access_token: "fake-access-token",
+              token_type: "Bearer",
+              expires_in: 3600,
+              id_token: googleIdToken({
+                sub: `google-${email}`,
+                email: email,
+                email_verified: true,
+                name: "Link Writer",
+              }),
+            });
+          }
+          if (
+            url.startsWith(
+              "https://graph.facebook.com/v24.0/oauth/access_token",
+            )
+          ) {
+            return Response.json({
+              access_token: "fake-fb-token",
+              token_type: "bearer",
+              expires_in: 3600,
+            });
+          }
+          if (url.startsWith("https://graph.facebook.com/debug_token")) {
+            return Response.json({
+              data: {
+                is_valid: true,
+                app_id: "test-facebook-client-id",
+                user_id: `fb-${email}`,
+              },
+            });
+          }
+          if (url.startsWith("https://graph.facebook.com/me")) {
+            return Response.json({
+              id: `fb-${email}`,
+              name: "Link Writer",
+              email: email,
+              picture: { data: { url: "https://example.com/link.jpg" } },
+            });
+          }
+          return realFetch(input, init);
+        },
+      );
+
+      async function signIn(provider: "facebook" | "google") {
+        const start = await exports.default.fetch(
+          `${ORIGIN}/api/auth/sign-in/social`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json", origin: ORIGIN },
+            body: JSON.stringify({ provider, callbackURL: "/" }),
+          },
+        );
+        const { url } = (await start.json()) as { url: string };
+        const state = new URL(url).searchParams.get("state");
+        return exports.default.fetch(
+          `${ORIGIN}/api/auth/callback/${provider}?code=fake-code&state=${state}`,
+          { headers: { cookie: cookieHeader(start) }, redirect: "manual" },
+        );
+      }
+
+      expect((await signIn(first)).status).toBe(302);
+
+      const res = await signIn(second);
+
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).not.toContain("error");
+      expect(res.headers.getSetCookie().join(";")).toContain("session_token");
+      expect(
+        await env.DB.prepare("SELECT COUNT(*) AS n FROM user WHERE email = ?")
+          .bind(email)
+          .first("n"),
+      ).toBe(1);
+      expect(
+        await env.DB.prepare(
+          "SELECT COUNT(*) AS n FROM account a JOIN user u ON u.id = a.user_id WHERE u.email = ?",
+        )
+          .bind(email)
+          .first("n"),
+      ).toBe(2);
+    },
+  );
+});

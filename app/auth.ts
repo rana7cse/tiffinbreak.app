@@ -8,7 +8,15 @@ import * as schema from "~/db/schema";
  * env vars holding its credentials. Adding one is an entry here, plus its two
  * env vars in wrangler.jsonc `secrets` and .dev.vars.example.
  */
-const socialProviders = {
+const socialProviders: Record<
+  string,
+  {
+    clientId: keyof Env;
+    clientSecret: keyof Env;
+    /** Provider-specific Better Auth options, merged into its config. */
+    extra?: { mapProfileToUser?: () => { emailVerified: boolean } };
+  }
+> = {
   google: {
     clientId: "GOOGLE_CLIENT_ID",
     clientSecret: "GOOGLE_CLIENT_SECRET",
@@ -20,8 +28,12 @@ const socialProviders = {
   facebook: {
     clientId: "FACEBOOK_CLIENT_ID",
     clientSecret: "FACEBOOK_CLIENT_SECRET",
+    // Facebook only returns confirmed emails, but Better Auth stores its users
+    // with emailVerified=false (the Graph API doesn't report it), which blocks
+    // linking a second provider into that user.
+    extra: { mapProfileToUser: () => ({ emailVerified: true }) },
   },
-} as const;
+};
 
 /**
  * Builds the Better Auth instance for this request's env. Workers have no
@@ -36,7 +48,11 @@ export function getAuth(env: Env) {
   const providers = Object.fromEntries(
     Object.entries(socialProviders).map(([id, keys]) => [
       id,
-      { clientId: env[keys.clientId], clientSecret: env[keys.clientSecret] },
+      {
+        clientId: env[keys.clientId],
+        clientSecret: env[keys.clientSecret],
+        ...keys.extra,
+      },
     ]),
   );
 
@@ -45,6 +61,14 @@ export function getAuth(env: Env) {
     baseURL: env.BETTER_AUTH_URL,
     database: drizzleAdapter(getDb(env.DB), { provider: "sqlite", schema }),
     socialProviders: providers,
+    account: {
+      accountLinking: {
+        enabled: true,
+        // Both providers only return emails they have verified, so a sign-in
+        // with the same email is the same Writer.
+        trustedProviders: Object.keys(socialProviders),
+      },
+    },
   });
 }
 
