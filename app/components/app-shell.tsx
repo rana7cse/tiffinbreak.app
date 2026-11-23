@@ -15,17 +15,9 @@ export function AppHeader({ writer }: { writer: Writer }) {
         <BrandMark />
         <span className="tb-brand__name">{strings.brand.name}</span>
       </a>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {/* Logout stays here until the Profile page owns it. */}
-        <form method="post" action="/logout">
-          <button className="tb-btn tb-btn--pill" type="submit">
-            {t.logout}
-          </button>
-        </form>
-        <a href="/profile" aria-label={t.myProfile}>
-          <Avatar name={writer.name} image={writer.image} />
-        </a>
-      </div>
+      <a href="/profile" aria-label={t.myProfile}>
+        <Avatar name={writer.name} image={writer.image} />
+      </a>
     </header>
   );
 }
@@ -33,7 +25,7 @@ export function AppHeader({ writer }: { writer: Writer }) {
 export type NavTab = "home" | "write" | "profile";
 
 /** The signed-in bottom nav (theme/feed.html `<BottomNav />`). */
-export function BottomNav({ active }: { active: NavTab }) {
+export function BottomNav({ active }: { active: NavTab | null }) {
   const current = (tab: NavTab) =>
     active === tab ? ({ "aria-current": "page" } as const) : {};
   return (
