@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "~/db";
 import * as schema from "~/db/schema";
+import { generateHandle } from "~/lib/handle";
 
 /**
  * Social providers. Each entry maps a Better Auth provider id to the Worker
@@ -56,10 +57,33 @@ export function getAuth(env: Env) {
     ]),
   );
 
+  const db = getDb(env.DB);
+
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
-    database: drizzleAdapter(getDb(env.DB), { provider: "sqlite", schema }),
+    database: drizzleAdapter(db, { provider: "sqlite", schema }),
+    user: {
+      additionalFields: {
+        handle: { type: "string", required: false, input: false },
+        role: {
+          type: "string",
+          required: false,
+          input: false,
+          defaultValue: "writer",
+        },
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          // Every new Writer gets a unique @handle from their name.
+          before: async (writer) => ({
+            data: { ...writer, handle: await generateHandle(db, writer.name) },
+          }),
+        },
+      },
+    },
     socialProviders: providers,
     account: {
       accountLinking: {

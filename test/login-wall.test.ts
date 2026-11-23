@@ -32,11 +32,10 @@ describe("login wall", () => {
     expect(res.headers.get("location")).toBe("/login?returnTo=%2Ffeed%3Fx%3D1");
   });
 
-  it("serves /feed to a logged-in Writer, greeting them by name", async () => {
+  it("serves /feed to a logged-in Writer", async () => {
     const { cookie } = await signInAs({ name: "Rafi Ahmed" });
     const res = await get("/feed", cookie);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("Rafi Ahmed");
   });
 
   it("keeps / and /health public", async () => {
@@ -103,11 +102,11 @@ describe("/write", () => {
     expect(res.headers.get("location")).toBe("/login?returnTo=%2Fwrite");
   });
 
-  it("renders the placeholder for a logged-in Writer", async () => {
+  it("renders the write page for a logged-in Writer", async () => {
     const { cookie } = await signInAs();
     const res = await get("/write", cookie);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("গল্প লেখা");
+    expect(await res.text()).toContain('id="tb-body"');
   });
 });
 

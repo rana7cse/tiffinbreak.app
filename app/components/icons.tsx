@@ -128,3 +128,34 @@ export function ImageIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** The two coloured placeholder icons of theme/profile.html's Story rows. */
+export function StoryTileIcon({
+  variant,
+  ...props
+}: IconProps & { variant: "ball" | "lamp" }) {
+  return (
+    <Icon size={32} strokeWidth={1.8} {...props}>
+      {variant === "ball" ? (
+        <>
+          <circle cx="12" cy="12" r="7" fill="#F9A9A0" />
+          <path d="M7 8c3 2 7 2 10 0M7 16c3-2 7-2 10 0" />
+        </>
+      ) : (
+        <>
+          <path d="M9 3h6v4l-3 2-3-2z" fill="#F6C35B" />
+          <path d="M12 9v3" />
+          <path d="M8 21c0-5 1.5-9 4-9s4 4 4 9z" fill="#FFFFFF" />
+        </>
+      )}
+    </Icon>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 5l7 7-7 7" />
+    </Icon>
+  );
+}

@@ -3,7 +3,14 @@
  * it, run `npm run db:generate` to write a SQL migration into `migrations/`.
  */
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 /**
  * Internal key/value table, not part of the domain. It gives the migration
@@ -20,8 +27,9 @@ export const appMeta = sqliteTable("app_meta", {
  *
  * A Writer (see GLOSSARY.md) is a row in `user`: Better Auth requires that
  * table name, and "user" stays out of UI copy. Name and avatar (`image`) are
- * copied from the provider on first sign-in; handle and role are added by
- * later tickets. Timestamps are stored as integer milliseconds.
+ * copied from the provider on first sign-in. `handle` is the unique public
+ * @handle (generated on first sign-in, see app/lib/handle.ts); `role` is
+ * `writer` or `admin`. Timestamps are stored as integer milliseconds.
  */
 const nowMs = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
 
@@ -33,6 +41,12 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   image: text("image"),
+  // Nullable only because SQLite cannot add a NOT NULL column without a
+  // default; the sign-in hook and the 0002 backfill leave no Writer without one.
+  handle: text("handle").unique(),
+  role: text("role", { enum: ["writer", "admin"] })
+    .default("writer")
+    .notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(nowMs)
     .notNull(),
@@ -109,4 +123,105 @@ export const verification = sqliteTable(
       .notNull(),
   },
   (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
+/**
+ * A School (see GLOSSARY.md): a school or college Stories are about.
+ * `name` is stored already normalised (see `normalizeSchoolName`) and is unique.
+ */
+export const school = sqliteTable("school", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  /** Optional English name, only used so English queries find the School. */
+  nameEn: text("name_en"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .default(nowMs)
+    .notNull(),
+});
+
+/**
+ * A Story (see GLOSSARY.md): a short memory by a Writer about one School.
+ * `coverKey` is the R2 object key of the optional cover photo. `loveTotal`
+ * and `reportCount` are denormalised counters kept by the Love and Report
+ * tickets; `hidden` is set once a Story has enough Reports (until an Admin
+ * reviews it).
+ */
+export const story = sqliteTable(
+  "story",
+  {
+    id: text("id").primaryKey(),
+    writerId: text("writer_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    schoolId: text("school_id")
+      .notNull()
+      .references(() => school.id),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    coverKey: text("cover_key"),
+    loveTotal: integer("love_total").default(0).notNull(),
+    reportCount: integer("report_count").default(0).notNull(),
+    hidden: integer("hidden", { mode: "boolean" }).default(false).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("story_created_at_idx").on(t.createdAt),
+    index("story_school_created_at_idx").on(t.schoolId, t.createdAt),
+    index("story_writer_created_at_idx").on(t.writerId, t.createdAt),
+  ],
+);
+
+/**
+ * Love (see GLOSSARY.md): how much one reader loves one Story, 1 to 10. It
+ * only ever increases. `story.loveTotal` is the denormalised sum of `count`
+ * per Story, rewritten in the same batch as every change (see `giveLove`).
+ */
+export const love = sqliteTable(
+  "love",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    count: integer("count").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.storyId, t.readerId] }),
+    check("love_count_range", sql`${t.count} between 1 and 10`),
+  ],
+);
+
+/**
+ * A Report (see GLOSSARY.md): one reader's flag on a Story, at most one per
+ * reader per Story. At 3 Reports the Story is hidden.
+ */
+export const report = sqliteTable(
+  "report",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reason: text("reason"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.readerId] })],
 );

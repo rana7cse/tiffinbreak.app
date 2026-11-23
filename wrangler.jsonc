@@ -1,6 +1,5 @@
 /**
  * Wrangler config: https://developers.cloudflare.com/workers/wrangler/configuration/
- * The R2 binding (bucket tiffinbreak-covers) is added by the cover-photo ticket.
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -37,10 +36,28 @@
 			"migrations_dir": "migrations"
 		}
 	],
+	// Cover photos. The remote bucket `tiffinbreak-covers` is created by a human.
+	"r2_buckets": [
+		{
+			"binding": "COVERS",
+			"bucket_name": "tiffinbreak-covers"
+		}
+	],
 	"kv_namespaces": [
 		{
 			"binding": "CACHE",
 			"id": "16b2e8cb837145d0b646bd79325f6d07"
 		}
+	],
+	// Per-Writer rate limits on write paths (app/lib/rate-limit.ts), keyed by
+	// Writer id. `period` may only be 10 or 60 seconds; namespace_id is a
+	// unique integer string per limit in the account.
+	"ratelimits": [
+		{ "name": "RL_PUBLISH", "namespace_id": "5301", "simple": { "limit": 5, "period": 60 } },
+		{ "name": "RL_EDIT", "namespace_id": "5302", "simple": { "limit": 20, "period": 60 } },
+		{ "name": "RL_LOVE", "namespace_id": "5303", "simple": { "limit": 60, "period": 60 } },
+		{ "name": "RL_REPORT", "namespace_id": "5304", "simple": { "limit": 5, "period": 60 } },
+		{ "name": "RL_UPLOAD", "namespace_id": "5305", "simple": { "limit": 10, "period": 60 } },
+		{ "name": "RL_SCHOOL", "namespace_id": "5306", "simple": { "limit": 10, "period": 60 } }
 	]
 }

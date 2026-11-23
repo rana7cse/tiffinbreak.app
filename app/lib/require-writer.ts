@@ -35,3 +35,15 @@ export async function requireWriter(args: GuardArgs) {
   }
   return session;
 }
+
+/**
+ * Gate for Admin routes: the login wall, then a 403 for any Writer whose
+ * `role` is not "admin".
+ */
+export async function requireAdmin(args: GuardArgs) {
+  const session = await requireWriter(args);
+  if ((session.user as { role?: string | null }).role !== "admin") {
+    throw new Response("Forbidden", { status: 403 });
+  }
+  return session;
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `school` ADD `name_en` text;
