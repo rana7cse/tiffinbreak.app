@@ -128,3 +128,11 @@ export function ImageIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 5l7 7-7 7" />
+    </Icon>
+  );
+}

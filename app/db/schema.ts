@@ -149,3 +149,41 @@ export const school = sqliteTable(
       .where(sql`${t.mergedIntoId} is null`),
   ],
 );
+
+/**
+ * A Story (see GLOSSARY.md): a short memory by a Writer about one School.
+ * `coverKey` is the R2 object key of the optional cover photo. `loveTotal`
+ * and `reportCount` are denormalised counters kept by the Love and Report
+ * tickets; `hidden` is set once a Story has enough Reports (until an Admin
+ * reviews it).
+ */
+export const story = sqliteTable(
+  "story",
+  {
+    id: text("id").primaryKey(),
+    writerId: text("writer_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    schoolId: text("school_id")
+      .notNull()
+      .references(() => school.id),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    coverKey: text("cover_key"),
+    loveTotal: integer("love_total").default(0).notNull(),
+    reportCount: integer("report_count").default(0).notNull(),
+    hidden: integer("hidden", { mode: "boolean" }).default(false).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("story_created_at_idx").on(t.createdAt),
+    index("story_school_created_at_idx").on(t.schoolId, t.createdAt),
+    index("story_writer_created_at_idx").on(t.writerId, t.createdAt),
+  ],
+);
