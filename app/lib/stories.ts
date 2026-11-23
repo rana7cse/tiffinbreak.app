@@ -81,3 +81,8 @@ export function paragraphs(body: string): string[] {
     .map((p) => p.trim())
     .filter(Boolean);
 }
+
+/** Where a cover image is served from; the one place to change it (#44). */
+export function coverUrl(coverKey: string): string {
+  return `/${coverKey}`;
+}

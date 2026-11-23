@@ -11,6 +11,7 @@ import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
   canReadStory,
+  coverUrl,
   formatStoryDate,
   getStoryById,
   paragraphs,
@@ -70,7 +71,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
 
       {s.coverKey ? (
         <img
-          src={`/${s.coverKey}`}
+          src={coverUrl(s.coverKey)}
           alt=""
           style={{
             display: "block",
