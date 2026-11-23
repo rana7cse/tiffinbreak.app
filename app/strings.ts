@@ -199,6 +199,12 @@ export const strings = {
 
   report: {
     action: "রিপোর্ট করো",
+    confirmTitle: "গল্পটা রিপোর্ট করবে?",
+    confirmHint: "কয়েকজন রিপোর্ট করলে গল্পটা লুকিয়ে ফেলা হবে।",
+    reasonLabel: "কারণ (চাইলে লিখতে পারো)",
+    submit: "রিপোর্ট পাঠাও",
+    cancel: "থাক",
+    done: "রিপোর্ট করা হয়েছে",
   },
 
   common: {

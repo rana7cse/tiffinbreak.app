@@ -3,11 +3,15 @@ import { getDb } from "~/db";
 import { school, story, user } from "~/db/schema";
 import { strings } from "~/strings";
 import { bn } from "./bangla-digits";
-import { formatStoryDate } from "./stories";
+import {
+  bumpFeedVersion,
+  formatStoryDate,
+  readFeedVersion,
+  visibleStory,
+} from "./stories";
 
 export const FEED_PAGE_SIZE = 10;
 const EXCERPT_LENGTH = 110;
-const VERSION_KEY = "feed:version";
 const CACHE_TTL_SECONDS = 60; // KV's minimum
 
 /** A Story as the Feed (and School/Profile lists) show it on a card. */
@@ -83,7 +87,7 @@ async function queryFeed(
     .innerJoin(school, eq(story.schoolId, school.id))
     .where(
       and(
-        eq(story.hidden, false),
+        visibleStory,
         after
           ? or(
               lt(story.createdAt, new Date(after.at)),
@@ -121,7 +125,7 @@ async function queryFeed(
 async function listFirstPage(
   env: Pick<Env, "DB" | "CACHE">,
 ): Promise<FeedPage> {
-  const key = `feed:first:${await readVersion(env.CACHE)}`;
+  const key = `feed:first:${await readFeedVersion(env.CACHE)}`;
   try {
     const hit = await env.CACHE.get<FeedPage>(key, "json");
     if (hit) return hit;
@@ -146,19 +150,7 @@ async function listFirstPage(
 export async function invalidateFeedCache(
   env: Pick<Env, "CACHE">,
 ): Promise<void> {
-  try {
-    await env.CACHE.put(VERSION_KEY, crypto.randomUUID());
-  } catch (error) {
-    console.error("feed: cache invalidation failed", error);
-  }
-}
-
-async function readVersion(cache: KVNamespace): Promise<string> {
-  try {
-    return (await cache.get(VERSION_KEY)) ?? "0";
-  } catch {
-    return "0";
-  }
+  await bumpFeedVersion(env.CACHE);
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;

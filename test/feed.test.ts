@@ -69,12 +69,11 @@ describe("Feed (GET /feed)", () => {
   it("links the Writer to /writers/:handle", async () => {
     const { cookie } = await signInAs();
     const { writer } = await createStory();
-    const row = await env.DB.prepare("SELECT handle FROM user WHERE id = ?")
-      .bind(writer?.id)
-      .first<{ handle: string }>();
-    expect(row?.handle).toBeTruthy();
+    await env.DB.prepare("UPDATE user SET handle = ? WHERE id = ?")
+      .bind("gollokar", writer?.id)
+      .run();
     const html = await (await get("/feed", cookie)).text();
-    expect(html).toContain(`href="/writers/${row?.handle}"`);
+    expect(html).toContain(`href="/writers/gollokar"`);
   });
 
   it("shows a cover only for Stories that have one", async () => {
@@ -133,5 +132,27 @@ describe("Feed (GET /feed)", () => {
     expect(titlesIn(await (await get("/feed", cookie)).text())[0]).toBe(
       "এইমাত্র প্রকাশিত",
     );
+  });
+
+  it("drops a Story from the cached first page once enough Reports hide it", async () => {
+    const { cookie } = await signInAs();
+    const { story } = await createStory({ title: "রিপোর্ট হবে" });
+    await createStory({ title: "থাকবে" });
+    // Warm the cache.
+    expect(titlesIn(await (await get("/feed", cookie)).text())).toContain(
+      "রিপোর্ট হবে",
+    );
+    for (let i = 0; i < 3; i++) {
+      const reader = await signInAs();
+      await exports.default.fetch(`${ORIGIN}/stories/${story.id}`, {
+        method: "POST",
+        headers: { cookie: reader.cookie },
+        body: new URLSearchParams({ intent: "report" }),
+        redirect: "manual",
+      });
+    }
+    expect(titlesIn(await (await get("/feed", cookie)).text())).toEqual([
+      "থাকবে",
+    ]);
   });
 });
