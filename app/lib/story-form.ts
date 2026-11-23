@@ -1,3 +1,4 @@
+import { data } from "react-router";
 import { bn } from "~/lib/bangla-digits";
 import { COVER_MAX_BYTES, type CoverError, validateCover } from "~/lib/cover";
 import { findOrCreateSchool, findSchoolById } from "~/lib/schools";
@@ -26,6 +27,28 @@ export type StoryFormResult =
       errors: Record<string, string>;
       values: { title: string; body: string; school: School | null };
     };
+
+/**
+ * The 429 answer for a Write/Edit post over a rate limit: the same form
+ * re-rendered with a Bangla message, keeping what the Writer typed.
+ */
+export function storyFormRateLimited(
+  form: FormData,
+  kind: "form" | "cover" = "form",
+) {
+  const field = (name: string) => {
+    const v = form.get(name);
+    return typeof v === "string" ? v : "";
+  };
+  const message = `${strings.errors.rateLimited} ${strings.errors.tryAgainLater}`;
+  return data(
+    {
+      errors: { [kind]: message } as Record<string, string>,
+      values: { title: field("title"), body: field("body"), school: null },
+    },
+    { status: 429, headers: { "Retry-After": "60" } },
+  );
+}
 
 /**
  * Reads and validates the Write/Edit form: the same rules for publishing and

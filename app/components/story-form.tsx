@@ -139,6 +139,11 @@ export function StoryForm({
           {t.coverPick}
         </button>
       )}
+      {errors.form ? (
+        <p className="tb-meta" role="alert">
+          {errors.form}
+        </p>
+      ) : null}
       {errors.cover ? (
         <p className="tb-meta" role="alert">
           {errors.cover}

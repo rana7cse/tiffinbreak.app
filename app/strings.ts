@@ -298,6 +298,7 @@ export const strings = {
   errors: {
     generic: "কিছু একটা ভুল হয়েছে",
     tryAgainLater: "একটু পরে আবার চেষ্টা করো।",
+    rateLimited: "অল্প সময়ে অনেকবার চেষ্টা করা হয়েছে।",
     errorTitle: "ভুল",
     notFoundTitle: "৪০৪",
     notFound: "এই পাতাটা খুঁজে পাওয়া যায়নি।",

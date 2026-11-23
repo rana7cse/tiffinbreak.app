@@ -1,5 +1,6 @@
 import { cloudflareContext } from "~/context";
 import { giveLove, parseTaps } from "~/lib/love";
+import { overLimit, tooManyRequestsJson } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import { canReadStory, getStoryById } from "~/lib/stories";
 import type { Route } from "./+types/story-love";
@@ -11,6 +12,7 @@ import type { Route } from "./+types/story-love";
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
+  if (await overLimit(env, "love", user.id)) return tooManyRequestsJson();
   const found = await getStoryById(env, params.id);
   if (!found || !canReadStory(found, user as { id: string; role?: string })) {
     return Response.json({ error: "not_found" }, { status: 404 });

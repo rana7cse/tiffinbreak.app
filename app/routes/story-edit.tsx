@@ -4,6 +4,7 @@ import { CloseIcon } from "~/components/icons";
 import { SchoolSheet } from "~/components/school-sheet";
 import { StoryForm } from "~/components/story-form";
 import { cloudflareContext } from "~/context";
+import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
@@ -12,7 +13,7 @@ import {
   getStoryById,
   updateStory,
 } from "~/lib/stories";
-import { parseStoryForm } from "~/lib/story-form";
+import { parseStoryForm, storyFormRateLimited } from "~/lib/story-form";
 import { strings } from "~/strings";
 import type { Route } from "./+types/story-edit";
 
@@ -42,7 +43,7 @@ async function loadOwnStory(args: {
   if (!canEditStory(found, reader)) {
     throw new Response("Forbidden", { status: 403 });
   }
-  return { env, found };
+  return { env, found, user };
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -57,17 +58,24 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
-  const { env, found } = await loadOwnStory({
+  const { env, found, user } = await loadOwnStory({
     request,
     context,
     id: params.id,
   });
-  const parsed = await parseStoryForm(env, await request.formData());
+  const form = await request.formData();
+  if (await overLimit(env, "edit", user.id)) {
+    return storyFormRateLimited(form);
+  }
+  const parsed = await parseStoryForm(env, form);
   if (!parsed.ok) {
     return data(
       { errors: parsed.errors, values: parsed.values },
       { status: 400 },
     );
+  }
+  if (parsed.cover && (await overLimit(env, "upload", user.id))) {
+    return storyFormRateLimited(form, "cover");
   }
   await updateStory(env, found, {
     ...parsed.input,
