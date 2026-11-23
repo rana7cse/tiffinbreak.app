@@ -26,7 +26,9 @@ async function sign(value: string, secret: string) {
  *   const { cookie, writer } = await signInAs({ name: "Rafi Ahmed" });
  *   await exports.default.fetch(url, { headers: { cookie } });
  */
-export async function signInAs(opts: { name?: string; email?: string } = {}) {
+export async function signInAs(
+  opts: { name?: string; email?: string; image?: string } = {},
+) {
   const id = crypto.randomUUID();
   const name = opts.name ?? "Test Writer";
   const email = opts.email ?? `${id}@example.com`;
@@ -35,8 +37,8 @@ export async function signInAs(opts: { name?: string; email?: string } = {}) {
 
   await env.DB.batch([
     env.DB.prepare(
-      "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)",
-    ).bind(id, name, email, now, now),
+      "INSERT INTO user (id, name, email, email_verified, image, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?, ?)",
+    ).bind(id, name, email, opts.image ?? null, now, now),
     env.DB.prepare(
       "INSERT INTO session (id, expires_at, token, created_at, updated_at, user_id) VALUES (?, ?, ?, ?, ?, ?)",
     ).bind(

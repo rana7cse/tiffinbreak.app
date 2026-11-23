@@ -96,6 +96,21 @@ describe("login page providers", () => {
   });
 });
 
+describe("/write", () => {
+  it("redirects a logged-out GET /write to login with returnTo", async () => {
+    const res = await get("/write");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/login?returnTo=%2Fwrite");
+  });
+
+  it("renders the placeholder for a logged-in Writer", async () => {
+    const { cookie } = await signInAs();
+    const res = await get("/write", cookie);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("গল্প লেখা");
+  });
+});
+
 describe("POST /login/:provider", () => {
   it("redirects to Google and sets the OAuth state cookie", async () => {
     const res = await post("/login/google", { returnTo: "/feed" });
