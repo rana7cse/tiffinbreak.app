@@ -225,89 +225,99 @@ describe("Facebook sign-in", () => {
 });
 
 describe("account linking", () => {
-  it("Google sign-in with the email of a Facebook Writer signs into that Writer", async () => {
-    const realFetch = globalThis.fetch;
-    vi.stubGlobal(
-      "fetch",
-      async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = new Request(input, init).url;
-        if (url.startsWith("https://oauth2.googleapis.com/token")) {
-          return Response.json({
-            access_token: "fake-access-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-            id_token: googleIdToken({
-              sub: "google-link",
-              email: "link@example.com",
-              email_verified: true,
+  it.each([
+    ["facebook", "google"],
+    ["google", "facebook"],
+  ] as const)(
+    "%s first, then %s with the same email signs into the same Writer",
+    async (first, second) => {
+      const email = `${first}-then-${second}@example.com`;
+      const realFetch = globalThis.fetch;
+      vi.stubGlobal(
+        "fetch",
+        async (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = new Request(input, init).url;
+          if (url.startsWith("https://oauth2.googleapis.com/token")) {
+            return Response.json({
+              access_token: "fake-access-token",
+              token_type: "Bearer",
+              expires_in: 3600,
+              id_token: googleIdToken({
+                sub: `google-${email}`,
+                email: email,
+                email_verified: true,
+                name: "Link Writer",
+              }),
+            });
+          }
+          if (
+            url.startsWith(
+              "https://graph.facebook.com/v24.0/oauth/access_token",
+            )
+          ) {
+            return Response.json({
+              access_token: "fake-fb-token",
+              token_type: "bearer",
+              expires_in: 3600,
+            });
+          }
+          if (url.startsWith("https://graph.facebook.com/debug_token")) {
+            return Response.json({
+              data: {
+                is_valid: true,
+                app_id: "test-facebook-client-id",
+                user_id: `fb-${email}`,
+              },
+            });
+          }
+          if (url.startsWith("https://graph.facebook.com/me")) {
+            return Response.json({
+              id: `fb-${email}`,
               name: "Link Writer",
-            }),
-          });
-        }
-        if (
-          url.startsWith("https://graph.facebook.com/v24.0/oauth/access_token")
-        ) {
-          return Response.json({
-            access_token: "fake-fb-token",
-            token_type: "bearer",
-            expires_in: 3600,
-          });
-        }
-        if (url.startsWith("https://graph.facebook.com/debug_token")) {
-          return Response.json({
-            data: {
-              is_valid: true,
-              app_id: "test-facebook-client-id",
-              user_id: "fb-link",
-            },
-          });
-        }
-        if (url.startsWith("https://graph.facebook.com/me")) {
-          return Response.json({
-            id: "fb-link",
-            name: "Link Writer",
-            email: "link@example.com",
-            picture: { data: { url: "https://example.com/link.jpg" } },
-          });
-        }
-        return realFetch(input, init);
-      },
-    );
-
-    async function signIn(provider: "facebook" | "google") {
-      const start = await exports.default.fetch(
-        `${ORIGIN}/api/auth/sign-in/social`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json", origin: ORIGIN },
-          body: JSON.stringify({ provider, callbackURL: "/" }),
+              email: email,
+              picture: { data: { url: "https://example.com/link.jpg" } },
+            });
+          }
+          return realFetch(input, init);
         },
       );
-      const { url } = (await start.json()) as { url: string };
-      const state = new URL(url).searchParams.get("state");
-      return exports.default.fetch(
-        `${ORIGIN}/api/auth/callback/${provider}?code=fake-code&state=${state}`,
-        { headers: { cookie: cookieHeader(start) }, redirect: "manual" },
-      );
-    }
 
-    const facebook = await signIn("facebook");
-    expect(facebook.status).toBe(302);
+      async function signIn(provider: "facebook" | "google") {
+        const start = await exports.default.fetch(
+          `${ORIGIN}/api/auth/sign-in/social`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json", origin: ORIGIN },
+            body: JSON.stringify({ provider, callbackURL: "/" }),
+          },
+        );
+        const { url } = (await start.json()) as { url: string };
+        const state = new URL(url).searchParams.get("state");
+        return exports.default.fetch(
+          `${ORIGIN}/api/auth/callback/${provider}?code=fake-code&state=${state}`,
+          { headers: { cookie: cookieHeader(start) }, redirect: "manual" },
+        );
+      }
 
-    const google = await signIn("google");
+      expect((await signIn(first)).status).toBe(302);
 
-    expect(google.status).toBe(302);
-    expect(google.headers.get("location")).not.toContain("error");
-    expect(google.headers.getSetCookie().join(";")).toContain("session_token");
-    expect(
-      await env.DB.prepare(
-        "SELECT COUNT(*) AS n FROM user WHERE email = 'link@example.com'",
-      ).first("n"),
-    ).toBe(1);
-    expect(
-      await env.DB.prepare(
-        "SELECT COUNT(*) AS n FROM account WHERE provider_id IN ('google','facebook')",
-      ).first("n"),
-    ).toBeGreaterThanOrEqual(2);
-  });
+      const res = await signIn(second);
+
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).not.toContain("error");
+      expect(res.headers.getSetCookie().join(";")).toContain("session_token");
+      expect(
+        await env.DB.prepare("SELECT COUNT(*) AS n FROM user WHERE email = ?")
+          .bind(email)
+          .first("n"),
+      ).toBe(1);
+      expect(
+        await env.DB.prepare(
+          "SELECT COUNT(*) AS n FROM account a JOIN user u ON u.id = a.user_id WHERE u.email = ?",
+        )
+          .bind(email)
+          .first("n"),
+      ).toBe(2);
+    },
+  );
 });
