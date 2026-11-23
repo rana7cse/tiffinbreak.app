@@ -114,9 +114,10 @@ types them on `Env`. Never commit real values.
 2. Credentials > Create credentials > OAuth client ID > Web application.
 3. Add these **Authorised redirect URIs** (`<origin>/api/auth/callback/google`):
    - `http://localhost:5173/api/auth/callback/google`
-   - `<your production origin>/api/auth/callback/google` (today the workers.dev
-     form: `https://tiffinbreak.<account-subdomain>.workers.dev/api/auth/callback/google`)
-4. Copy the client ID and secret into `.dev.vars` (local) and production
+   - `https://tiffinbreak.faridpuri.com/api/auth/callback/google`
+4. Under **Authorised domains** (OAuth consent screen > Branding) add
+   `faridpuri.com`.
+5. Copy the client ID and secret into `.dev.vars` (local) and production
    secrets (below).
 
 ### Create the Meta app (Facebook login)
@@ -127,8 +128,7 @@ types them on `Env`. Never commit real values.
 2. Facebook Login > Settings > **Valid OAuth Redirect URIs**
    (`<origin>/api/auth/callback/facebook`):
    - `http://localhost:5173/api/auth/callback/facebook`
-   - `<your production origin>/api/auth/callback/facebook` (today the
-     workers.dev form, as above)
+   - `https://tiffinbreak.faridpuri.com/api/auth/callback/facebook`
 3. Settings > Basic: copy **App ID** and **App Secret** into
    `FACEBOOK_CLIENT_ID` and `FACEBOOK_CLIENT_SECRET` (`.dev.vars` locally,
    production secrets below). Only `email` and `public_profile` are requested.
@@ -138,8 +138,8 @@ The app starts in **Development mode**: only people with a role on the app
 Live, which requires:
 
 - a privacy policy URL and a data deletion URL (or instructions) in Settings > Basic:
-  - **Privacy Policy URL**: `<your production origin>/privacy`
-  - **Data Deletion Instructions URL**: `<your production origin>/data-deletion`;
+  - **Privacy Policy URL**: `https://tiffinbreak.faridpuri.com/privacy`
+  - **Data Deletion Instructions URL**: `https://tiffinbreak.faridpuri.com/data-deletion`;
 - Business Verification of the owning Meta business;
 - App Review for any permission beyond the defaults (`email` and
   `public_profile` are default, so normally none).
@@ -152,12 +152,10 @@ run on deploy via `npm run deploy:prod`.
 
 ## Production setup (one-time, by a human)
 
-Production runs on Cloudflare Workers. It starts on the workers.dev URL,
-`https://tiffinbreak.<account-subdomain>.workers.dev`, shown in the dashboard
-under Workers & Pages > tiffinbreak and printed by the deploy. That URL is
-`<your production origin>` below. The custom domain `tiffinbreak.app` comes
-later (see the end of this section). Workers Builds deploys `main` to production
-and gives every pull request a preview URL. Do these once, in order.
+Production runs on Cloudflare Workers at `https://tiffinbreak.faridpuri.com`. The workers.dev URL
+stays on but is not the production origin. The custom domain `tiffinbreak.app`
+comes later (see the end of this section). Workers Builds deploys `main` to
+production and gives every pull request a preview URL. Do these once, in order.
 
 1. **Resources (already created, APAC).** The IDs are in `wrangler.jsonc`. To
    recreate them in another account, run these and paste the new IDs in:
@@ -207,7 +205,7 @@ and gives every pull request a preview URL. Do these once, in order.
    ```sh
    openssl rand -base64 32                        # value for BETTER_AUTH_SECRET
    npx wrangler secret put BETTER_AUTH_SECRET
-   npx wrangler secret put BETTER_AUTH_URL        # <your production origin>, today the workers.dev URL
+   npx wrangler secret put BETTER_AUTH_URL        # https://tiffinbreak.faridpuri.com
    npx wrangler secret put GOOGLE_CLIENT_ID
    npx wrangler secret put GOOGLE_CLIENT_SECRET
    npx wrangler secret put FACEBOOK_CLIENT_ID
@@ -218,32 +216,43 @@ and gives every pull request a preview URL. Do these once, in order.
    [Create the Google OAuth client](#create-the-google-oauth-client) and
    [Create the Meta app](#create-the-meta-app-facebook-login).
 
-5. **OAuth redirect URIs.** Add `<your production origin>/api/auth/callback/google`
+5. **Custom domain.** `tiffinbreak.faridpuri.com` is attached automatically on
+   deploy by the `routes` entry in `wrangler.jsonc`, because the `faridpuri.com`
+   zone is already active in this Cloudflare account. If a DNS record named
+   `tiffinbreak` already exists in the faridpuri.com zone, delete it first (the
+   Custom Domain creates its own record and certificate). Check it under the
+   Worker > Settings > Domains & Routes.
+
+6. **OAuth redirect URIs.** Add `https://tiffinbreak.faridpuri.com/api/auth/callback/google`
    and `.../facebook` to the Google client and the Meta app, as listed in the
    two sections linked in step 4.
 
-6. **Deploy and verify.** Push to `main` (or retry the build under the
+7. **Deploy and verify.** Push to `main` (or retry the build under the
    Worker's Deployments > Builds), then:
 
    ```sh
-   curl <your production origin>/health   # {"status":"ok","db":"ok"}
+   curl https://tiffinbreak.faridpuri.com/health   # {"status":"ok","db":"ok"}
    ```
 
    Open a PR to confirm it gets a preview URL (shown in the Worker's
    Deployments tab).
 
-### Later: add the custom domain
+### Later: move to tiffinbreak.app
 
-When `tiffinbreak.app` is ready to go live:
+When `tiffinbreak.app` is ready to go live (`tiffinbreak.faridpuri.com` can stay
+as an extra Custom Domain or be removed from `routes`):
 
 1. Onboard the zone: Dashboard > Domains > Onboard a domain, then point the
    registrar's nameservers at Cloudflare.
 2. Delete any old DNS records on the apex (`tiffinbreak.app`); the Custom Domain
    creates its own record and certificate.
-3. Add back to `wrangler.jsonc` and deploy:
+3. Add a second route in `wrangler.jsonc` (or replace the faridpuri.com one) and deploy:
 
    ```jsonc
-   "routes": [{ "pattern": "tiffinbreak.app", "custom_domain": true }],
+   "routes": [
+     { "pattern": "tiffinbreak.faridpuri.com", "custom_domain": true },
+     { "pattern": "tiffinbreak.app", "custom_domain": true }
+   ],
    ```
 
    Check it under the Worker > Settings > Domains & Routes.

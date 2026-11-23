@@ -23,9 +23,9 @@
 			"FACEBOOK_CLIENT_SECRET"
 		]
 	},
-	// Production runs on workers.dev for now. The tiffinbreak.app Custom Domain
-	// route is added later (see README, "Later: add the custom domain"). Preview
-	// URLs stay on so pull requests get previews.
+	// Production origin: Custom Domain attached on deploy (zone is in this account).
+	"routes": [{ "pattern": "tiffinbreak.faridpuri.com", "custom_domain": true }],
+	// workers.dev and preview URLs stay on so pull requests get previews.
 	"workers_dev": true,
 	"preview_urls": true,
 	"d1_databases": [
