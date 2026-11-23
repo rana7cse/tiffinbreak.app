@@ -37,6 +37,19 @@ export async function handleTaken(
   return !!hit;
 }
 
+/** A Writer's current avatar image (URL or `/covers/...` path), straight from D1. */
+export async function getWriterImage(
+  env: Pick<Env, "DB">,
+  id: string,
+): Promise<string | null> {
+  const row = await getDb(env.DB)
+    .select({ image: user.image })
+    .from(user)
+    .where(eq(user.id, id))
+    .get();
+  return row?.image ?? null;
+}
+
 /**
  * Saves a Writer's name, handle and (when given) avatar URL. Returns false
  * when the handle was taken in the meantime (unique constraint).

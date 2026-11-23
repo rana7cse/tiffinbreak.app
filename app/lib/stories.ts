@@ -2,11 +2,8 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db";
 import { report, school, story, user } from "~/db/schema";
 import { deleteCover, storeCover } from "~/lib/cover";
-import { strings } from "~/strings";
-import { bn } from "./bangla-digits";
 
 const WORDS_PER_MINUTE = 200;
-const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
 
 export type StoryView = {
   id: string;
@@ -69,12 +66,6 @@ export function readingTimeMinutes(body: string): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
-/** "২১ নভেম্বর", in Bangladesh time. */
-export function formatStoryDate(date: Date): string {
-  const d = new Date(date.getTime() + DHAKA_OFFSET_MS);
-  return `${bn(d.getUTCDate())} ${strings.story.months[d.getUTCMonth()]}`;
-}
-
 /** Splits a Story body into paragraphs on blank lines. */
 export function paragraphs(body: string): string[] {
   return body
@@ -83,21 +74,31 @@ export function paragraphs(body: string): string[] {
     .filter(Boolean);
 }
 
-/** Inserts a published Story, invalidates the Feed cache and returns its id. */
+/**
+ * Stores the cover (if any), inserts a published Story, invalidates the Feed
+ * cache and returns its id. If the insert fails, the new cover is deleted.
+ */
 export async function publishStory(
-  env: Pick<Env, "DB" | "CACHE">,
+  env: Pick<Env, "DB" | "CACHE" | "COVERS">,
   input: {
     writerId: string;
     schoolId: string;
     title: string;
     body: string;
-    coverKey?: string | null;
+    cover?: File | null;
   },
 ): Promise<string> {
+  const { cover, ...fields } = input;
+  const coverKey = cover ? await storeCover(env, cover) : null;
   const id = crypto.randomUUID();
-  await getDb(env.DB)
-    .insert(story)
-    .values({ id, ...input });
+  try {
+    await getDb(env.DB)
+      .insert(story)
+      .values({ id, ...fields, coverKey });
+  } catch (error) {
+    await deleteCover(env, coverKey);
+    throw error;
+  }
   await bumpFeedVersion(env.CACHE);
   return id;
 }
@@ -129,10 +130,15 @@ export async function updateStory(
   const { cover, removeCover, ...fields } = input;
   const newKey = cover ? await storeCover(env, cover) : null;
   const coverKey = newKey ?? (removeCover ? null : current.coverKey);
-  await getDb(env.DB)
-    .update(story)
-    .set({ ...fields, coverKey })
-    .where(eq(story.id, current.id));
+  try {
+    await getDb(env.DB)
+      .update(story)
+      .set({ ...fields, coverKey })
+      .where(eq(story.id, current.id));
+  } catch (error) {
+    await deleteCover(env, newKey);
+    throw error;
+  }
   if (coverKey !== current.coverKey) await deleteCover(env, current.coverKey);
   await bumpFeedVersion(env.CACHE);
 }

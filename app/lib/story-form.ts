@@ -78,9 +78,11 @@ export async function parseStoryForm(
   }
 
   const schoolId = field("schoolId");
-  const school = schoolId
-    ? await findSchoolById(env, schoolId)
-    : await findOrCreateSchool(env, field("schoolName"));
+  // A School chosen in the sheet arrives by id. If it was merged away since
+  // (a stale draft), fall back to its name rather than losing the choice.
+  const school =
+    (schoolId ? await findSchoolById(env, schoolId) : null) ??
+    (await findOrCreateSchool(env, field("schoolName")));
   if (!school) errors.school = t.errors.schoolRequired;
 
   const upload = form.get("cover");

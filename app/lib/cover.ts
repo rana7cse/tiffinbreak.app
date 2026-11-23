@@ -43,6 +43,16 @@ export async function storeCover(
   return key;
 }
 
+/**
+ * The R2 key behind a stored `/covers/...` image path, or null for anything
+ * else (a Google or Facebook photo URL, or no image). Only our own objects
+ * may ever be deleted.
+ */
+export function ownCoverKey(image: string | null | undefined): string | null {
+  const key = image?.startsWith("/") ? image.slice(1) : null;
+  return key && /^covers\/[0-9a-f]{32}\.(jpg|png|webp)$/.test(key) ? key : null;
+}
+
 /** Removes a cover from R2. Best effort: an orphan object is harmless. */
 export async function deleteCover(
   env: Pick<Env, "COVERS">,

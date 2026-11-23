@@ -1,8 +1,9 @@
 import { asc, desc, eq, gt, inArray, or } from "drizzle-orm";
 import { getDb } from "~/db";
 import { report, school, story, user } from "~/db/schema";
+import { deleteCover } from "./cover";
 import { normalizeSchoolName } from "./school-name";
-import { bumpVersion as bumpSchoolsVersion } from "./schools";
+import { bumpSchoolSuggestVersion } from "./schools";
 import { bumpFeedVersion } from "./stories";
 
 export type ReviewItem = {
@@ -111,13 +112,7 @@ export async function removeStory(
     .get();
   if (!found) return false;
   await db.delete(story).where(eq(story.id, storyId));
-  if (found.coverKey) {
-    try {
-      await env.COVERS.delete(found.coverKey);
-    } catch (error) {
-      console.error("admin: cover delete failed", error);
-    }
-  }
+  await deleteCover(env, found.coverKey);
   await bumpFeedVersion(env.CACHE);
   return true;
 }
@@ -172,7 +167,7 @@ export async function mergeSchools(
       .where(eq(story.schoolId, duplicateId)),
     db.delete(school).where(eq(school.id, duplicateId)),
   ]);
-  await bumpSchoolsVersion(env.CACHE);
+  await bumpSchoolSuggestVersion(env.CACHE);
   await bumpFeedVersion(env.CACHE);
   return "merged";
 }

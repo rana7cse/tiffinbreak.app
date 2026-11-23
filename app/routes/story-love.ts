@@ -14,7 +14,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   if (await overLimit(env, "love", user.id)) return tooManyRequestsJson();
   const found = await getStoryById(env, params.id);
-  if (!found || !canReadStory(found, user as { id: string; role?: string })) {
+  if (!found || !canReadStory(found, user)) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
   if (found.writer.id === user.id) {
