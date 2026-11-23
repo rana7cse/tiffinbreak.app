@@ -1,12 +1,9 @@
 import { Avatar } from "~/components/avatar";
-import {
-  BackIcon,
-  ChevronRightIcon,
-  HeartIcon,
-  ShareIcon,
-} from "~/components/icons";
+import { BackIcon, ChevronRightIcon, ShareIcon } from "~/components/icons";
+import { LoveActionButton, LoveBox, useLove } from "~/components/love-box";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
+import { getMyLove } from "~/lib/love";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
@@ -43,6 +40,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     paragraphs: paragraphs(found.body),
     coverKey: found.coverKey,
     loveTotal: found.loveTotal,
+    myLove: await getMyLove(env, found.id, user.id),
+    isOwn: found.writer.id === user.id,
     date: formatStoryDate(found.createdAt),
     minutes: readingTimeMinutes(found.body),
     writer: found.writer,
@@ -51,6 +50,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 }
 
 export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
+  const love = useLove(s.id, { mine: s.myLove, total: s.loveTotal }, s.isOwn);
   const firstName = s.writer.name.split(/\s+/)[0] ?? s.writer.name;
   return (
     <>
@@ -131,34 +131,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
           • • •
         </div>
 
-        {/* LoveBox: static until the Love ticket. */}
-        <section
-          className="tb-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 10,
-            padding: "22px 16px",
-            background: "var(--tb-peach)",
-            overflow: "visible",
-          }}
-        >
-          <p style={{ fontSize: 17, fontWeight: 600, textAlign: "center" }}>
-            {t.loveBoxTitle}
-          </p>
-          <button
-            type="button"
-            className="tb-btn tb-love-big"
-            aria-label={strings.love.give}
-            style={{ width: 74, height: 74, padding: 0, borderRadius: "50%" }}
-          >
-            <HeartIcon size={36} color="#C0501D" />
-          </button>
-          <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>
-            <span>{bn(s.loveTotal)}</span> {t.loveCount} · {strings.love.hint}
-          </p>
-        </section>
+        <LoveBox love={love} disabled={s.isOwn} />
 
         <a
           className="tb-row"
@@ -178,17 +151,9 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
         </a>
       </article>
 
-      {/* StoryActionBar: static until the Love and Share tickets. */}
+      {/* StoryActionBar: Share stays static until the Share ticket. */}
       <nav className="tb-action-bar" aria-label={t.actions}>
-        <button
-          type="button"
-          className="tb-btn tb-btn--pill"
-          aria-label={strings.love.give}
-          style={{ fontSize: 16, color: "var(--tb-accent)" }}
-        >
-          <HeartIcon size={22} color="#C0501D" />
-          <span>{bn(s.loveTotal)}</span>
-        </button>
+        <LoveActionButton love={love} disabled={s.isOwn} />
         <button
           type="button"
           className="tb-btn tb-btn--dark tb-btn--pill"

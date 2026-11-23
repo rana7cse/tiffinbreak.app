@@ -4,8 +4,10 @@
  */
 import { sql } from "drizzle-orm";
 import {
+  check,
   index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
@@ -185,5 +187,33 @@ export const story = sqliteTable(
     index("story_created_at_idx").on(t.createdAt),
     index("story_school_created_at_idx").on(t.schoolId, t.createdAt),
     index("story_writer_created_at_idx").on(t.writerId, t.createdAt),
+  ],
+);
+
+/**
+ * Love (see GLOSSARY.md): how much one reader loves one Story, 1 to 10. It
+ * only ever increases. `story.loveTotal` is the denormalised sum of `count`
+ * per Story, rewritten in the same batch as every change (see `giveLove`).
+ */
+export const love = sqliteTable(
+  "love",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    count: integer("count").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.storyId, t.readerId] }),
+    check("love_count_range", sql`${t.count} between 1 and 10`),
   ],
 );
