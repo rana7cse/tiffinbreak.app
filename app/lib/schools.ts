@@ -47,7 +47,7 @@ export async function findOrCreateSchool(
 }
 
 /**
- * Schools whose name contains the query, never merged ones. An empty query
+ * Schools whose Bangla or English name contains the query, never merged ones. An empty query
  * returns the newest Schools. Results are cached in KV for a short TTL;
  * every failure of the cache falls back to D1, so correctness never depends
  * on it.
@@ -58,7 +58,7 @@ export async function suggestSchools(
 ): Promise<SchoolSummary[]> {
   const q = normalizeSchoolName(rawQuery);
   const version = await readVersion(env.CACHE);
-  const key = `schools:suggest:${version}:${q}`;
+  const key = `schools:suggest:v2:${version}:${q}`;
 
   try {
     const hit = await env.CACHE.get<SchoolSummary[]>(key, "json");
@@ -69,6 +69,8 @@ export async function suggestSchools(
 
   const db = getDb(env.DB);
   const escaped = q.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const pattern = `%${escaped}%`;
+  const patternEn = `%${escaped.toLowerCase()}%`;
   const rows = await db
     .select({ id: school.id, name: school.name })
     .from(school)
@@ -76,7 +78,7 @@ export async function suggestSchools(
       and(
         isNull(school.mergedIntoId),
         q
-          ? sql`${school.normalizedName} like ${`%${escaped}%`} escape '\\'`
+          ? sql`(${school.normalizedName} like ${pattern} escape '\\' or lower(${school.nameEn}) like ${patternEn} escape '\\')`
           : undefined,
       ),
     )

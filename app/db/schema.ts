@@ -136,6 +136,8 @@ export const school = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     normalizedName: text("normalized_name").notNull(),
+    /** Optional English name, only used so English queries find the School. */
+    nameEn: text("name_en"),
     mergedIntoId: text("merged_into_id"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(nowMs)

@@ -140,6 +140,64 @@ describe("School suggestions (GET /schools?q=)", () => {
   });
 });
 
+describe("English names", () => {
+  const withEn = async (name: string, nameEn: string | null) => {
+    const id = crypto.randomUUID();
+    await env.DB.prepare(
+      "INSERT INTO school (id, name, normalized_name, name_en) VALUES (?, ?, ?, ?)",
+    )
+      .bind(id, name, name, nameEn)
+      .run();
+  };
+
+  it("finds the Bangla-named School by an English query", async () => {
+    const { cookie } = await signInAs();
+    await withEn("ফরিদপুর জিলা স্কুল", "Faridpur Zilla School");
+    expect(await names(await suggest("zilla", cookie))).toEqual([
+      "ফরিদপুর জিলা স্কুল",
+    ]);
+    expect(await names(await suggest("  ZILLA  sch", cookie))).toEqual([
+      "ফরিদপুর জিলা স্কুল",
+    ]);
+    expect(await names(await suggest("ZILLA", cookie))).toEqual([
+      "ফরিদপুর জিলা স্কুল",
+    ]);
+  });
+
+  it("still matches Bangla queries", async () => {
+    const { cookie } = await signInAs();
+    await withEn("ফরিদপুর জিলা স্কুল", "Faridpur Zilla School");
+    expect(await names(await suggest("জিলা", cookie))).toEqual([
+      "ফরিদপুর জিলা স্কুল",
+    ]);
+  });
+
+  it("is fine with a null English name", async () => {
+    const { cookie } = await signInAs();
+    await withEn("রূপনগর হাই স্কুল", null);
+    expect(await names(await suggest("zilla", cookie))).toEqual([]);
+    expect(await names(await suggest("রূপনগর", cookie))).toEqual([
+      "রূপনগর হাই স্কুল",
+    ]);
+  });
+
+  it("escapes % and _ on the English side", async () => {
+    const { cookie } = await signInAs();
+    await withEn("স্কুল", "Plain School");
+    expect(await names(await suggest("%", cookie))).toEqual([]);
+    expect(await names(await suggest("_", cookie))).toEqual([]);
+  });
+
+  it("leaves name_en null for Schools created through POST", async () => {
+    const { cookie } = await signInAs();
+    const s = await created("School A", cookie);
+    const row = await env.DB.prepare("SELECT name_en FROM school WHERE id = ?")
+      .bind(s.id)
+      .first<{ name_en: string | null }>();
+    expect(row?.name_en).toBeNull();
+  });
+});
+
 describe("suggestion cache", () => {
   it("stores results in KV", async () => {
     const { cookie } = await signInAs();
