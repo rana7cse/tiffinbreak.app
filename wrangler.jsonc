@@ -23,10 +23,9 @@
 			"FACEBOOK_CLIENT_SECRET"
 		]
 	},
-	// Production domain. Attached as a Custom Domain on deploy; the zone must be
-	// in the same Cloudflare account. workers.dev and preview URLs stay on so
-	// pull requests get previews.
-	"routes": [{ "pattern": "tiffinbreak.app", "custom_domain": true }],
+	// Production origin: Custom Domain attached on deploy (zone is in this account).
+	"routes": [{ "pattern": "tiffinbreak.faridpuri.com", "custom_domain": true }],
+	// workers.dev and preview URLs stay on so pull requests get previews.
 	"workers_dev": true,
 	"preview_urls": true,
 	"d1_databases": [
