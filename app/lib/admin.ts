@@ -1,6 +1,8 @@
-import { desc, eq, gt, inArray, or } from "drizzle-orm";
+import { asc, desc, eq, gt, inArray, or } from "drizzle-orm";
 import { getDb } from "~/db";
 import { report, school, story, user } from "~/db/schema";
+import { normalizeSchoolName } from "./school-name";
+import { bumpVersion as bumpSchoolsVersion } from "./schools";
 import { bumpFeedVersion } from "./stories";
 
 export type ReviewItem = {
@@ -118,4 +120,59 @@ export async function removeStory(
   }
   await bumpFeedVersion(env.CACHE);
   return true;
+}
+
+/** Every School name, for the merge form's suggestions. */
+export async function listSchoolNames(env: Pick<Env, "DB">) {
+  return getDb(env.DB)
+    .select({ id: school.id, name: school.name })
+    .from(school)
+    .orderBy(asc(school.name))
+    .limit(1000);
+}
+
+export type MergeResult = "merged" | "not-found" | "same";
+
+/** A School by id or by (normalised) name. */
+async function resolveSchool(env: Pick<Env, "DB">, ref: string) {
+  const db = getDb(env.DB);
+  const byId = await db
+    .select({ id: school.id })
+    .from(school)
+    .where(eq(school.id, ref.trim()))
+    .get();
+  if (byId) return byId.id;
+  const byName = await db
+    .select({ id: school.id })
+    .from(school)
+    .where(eq(school.name, normalizeSchoolName(ref)))
+    .get();
+  return byName?.id ?? null;
+}
+
+/**
+ * Folds a duplicate School into the kept one: its Stories move over and the
+ * duplicate row is deleted, in one D1 batch. Each argument is a School id or
+ * name. The duplicate's old URL then 404s (no redirect).
+ */
+export async function mergeSchools(
+  env: Pick<Env, "DB" | "CACHE">,
+  duplicateRef: string,
+  keptRef: string,
+): Promise<MergeResult> {
+  const duplicateId = await resolveSchool(env, duplicateRef);
+  const keptId = await resolveSchool(env, keptRef);
+  if (!duplicateId || !keptId) return "not-found";
+  if (duplicateId === keptId) return "same";
+  const db = getDb(env.DB);
+  await db.batch([
+    db
+      .update(story)
+      .set({ schoolId: keptId })
+      .where(eq(story.schoolId, duplicateId)),
+    db.delete(school).where(eq(school.id, duplicateId)),
+  ]);
+  await bumpSchoolsVersion(env.CACHE);
+  await bumpFeedVersion(env.CACHE);
+  return "merged";
 }

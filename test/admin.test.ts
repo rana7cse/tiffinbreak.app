@@ -116,3 +116,83 @@ describe("Admin review", () => {
     expect((await act("remove", "nope", await adminCookie())).status).toBe(404);
   });
 });
+
+describe("Merge Schools", () => {
+  const merge = (duplicate: string, kept: string, cookie?: string) =>
+    exports.default.fetch(`${ORIGIN}/admin`, {
+      method: "POST",
+      headers: cookie ? { cookie } : {},
+      body: new URLSearchParams({ intent: "merge", duplicate, kept }),
+      redirect: "manual",
+    });
+  const schoolPage = (id: string, cookie: string) =>
+    exports.default.fetch(`${ORIGIN}/schools/${id}`, {
+      headers: { cookie },
+      redirect: "manual",
+    });
+  const suggestions = async (cookie: string) =>
+    JSON.stringify(
+      await (
+        await exports.default.fetch(`${ORIGIN}/schools?q=Merge%20School`, {
+          headers: { cookie },
+        })
+      ).json(),
+    );
+  const schoolOf = async (storyId: string) =>
+    (
+      await env.DB.prepare("SELECT school_id AS s FROM story WHERE id = ?")
+        .bind(storyId)
+        .first<{ s: string }>()
+    )?.s;
+
+  it("is Admin only", async () => {
+    const { cookie } = await signInAs();
+    const a = await createStory();
+    const b = await createStory();
+    expect((await merge(a.school.id, b.school.id, cookie)).status).toBe(403);
+    expect((await merge(a.school.id, b.school.id)).status).toBe(302);
+    expect(await schoolOf(a.story.id)).toBe(a.school.id);
+  });
+
+  it("moves Stories, deletes the duplicate and 404s its URL", async () => {
+    const cookie = await adminCookie();
+    const dup = await createStory();
+    const dup2 = await createStory({ schoolId: dup.school.id });
+    const kept = await createStory();
+    expect((await schoolPage(dup.school.id, cookie)).status).toBe(200);
+
+    const res = await merge(dup.school.id, kept.school.id, cookie);
+    expect(res.status).toBe(303);
+    expect(await schoolOf(dup.story.id)).toBe(kept.school.id);
+    expect(await schoolOf(dup2.story.id)).toBe(kept.school.id);
+    const left = await env.DB.prepare("SELECT id FROM school WHERE id = ?")
+      .bind(dup.school.id)
+      .first();
+    expect(left).toBeNull();
+    const old = await schoolPage(dup.school.id, cookie);
+    expect(old.status).toBe(404);
+    expect(old.headers.get("location")).toBeNull();
+  });
+
+  it("accepts School names and drops the duplicate from suggestions", async () => {
+    const cookie = await adminCookie();
+    const dup = await createStory({ schoolName: "Dup Merge School" });
+    const kept = await createStory({ schoolName: "Kept Merge School" });
+    expect(await suggestions(cookie)).toContain("Dup Merge School");
+
+    const res = await merge("Dup Merge School", "Kept Merge School", cookie);
+    expect(res.status).toBe(303);
+    const text = await suggestions(cookie);
+    expect(text).not.toContain("Dup Merge School");
+    expect(text).toContain("Kept Merge School");
+    expect(await schoolOf(dup.story.id)).toBe(kept.school.id);
+  });
+
+  it("rejects the same School and unknown Schools", async () => {
+    const cookie = await adminCookie();
+    const a = await createStory();
+    expect((await merge(a.school.id, a.school.id, cookie)).status).toBe(400);
+    expect((await merge(a.school.id, "nope", cookie)).status).toBe(404);
+    expect(await schoolOf(a.story.id)).toBe(a.school.id);
+  });
+});
