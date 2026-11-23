@@ -3,7 +3,13 @@
  * it, run `npm run db:generate` to write a SQL migration into `migrations/`.
  */
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 /**
  * Internal key/value table, not part of the domain. It gives the migration
@@ -116,4 +122,28 @@ export const verification = sqliteTable(
       .notNull(),
   },
   (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
+/**
+ * A School (see GLOSSARY.md): a school or college Stories are about.
+ * `normalizedName` is the NFC/trimmed/whitespace-collapsed name (see
+ * `normalizeSchoolName`); it is unique among Schools that have not been
+ * merged away. `mergedIntoId` is set when an Admin folds a duplicate in.
+ */
+export const school = sqliteTable(
+  "school",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    mergedIntoId: text("merged_into_id"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("school_normalized_name_unique")
+      .on(t.normalizedName)
+      .where(sql`${t.mergedIntoId} is null`),
+  ],
 );

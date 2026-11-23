@@ -7,6 +7,7 @@ export default [
   route("logout", "routes/logout.ts"),
   route("feed", "routes/feed.tsx"),
   route("write", "routes/write.tsx"),
+  route("schools", "routes/schools.ts"),
   route("profile", "routes/profile.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("data-deletion", "routes/data-deletion.tsx"),
