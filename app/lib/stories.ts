@@ -82,9 +82,9 @@ export function paragraphs(body: string): string[] {
     .filter(Boolean);
 }
 
-/** Inserts a published Story and returns its id. */
+/** Inserts a published Story, invalidates the Feed cache and returns its id. */
 export async function publishStory(
-  env: Pick<Env, "DB">,
+  env: Pick<Env, "DB" | "CACHE">,
   input: {
     writerId: string;
     schoolId: string;
@@ -97,6 +97,7 @@ export async function publishStory(
   await getDb(env.DB)
     .insert(story)
     .values({ id, ...input });
+  await bumpFeedVersion(env.CACHE);
   return id;
 }
 
@@ -119,7 +120,7 @@ export async function readFeedVersion(cache: KVNamespace): Promise<string> {
   }
 }
 
-async function bumpFeedVersion(cache: KVNamespace) {
+export async function bumpFeedVersion(cache: KVNamespace) {
   try {
     await cache.put(FEED_VERSION_KEY, crypto.randomUUID());
   } catch (error) {

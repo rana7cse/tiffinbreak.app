@@ -1,4 +1,8 @@
-/** Cover photos: validation, R2 storage, and the one place that builds URLs. */
+/**
+ * Cover photos: validation and R2 storage. The stored `cover_key` is
+ * `covers/<random>.<ext>`, which is also the public path (`/covers/:name`),
+ * so `coverUrl` in `story-share.ts` needs no special case.
+ */
 
 export const COVER_MAX_BYTES = 3 * 1024 * 1024;
 
@@ -12,12 +16,7 @@ const TYPES_BY_EXTENSION = Object.fromEntries(
   Object.entries(EXTENSIONS).map(([type, ext]) => [ext, type]),
 );
 
-const KEY_PATTERN = /^[0-9a-f]{32}\.(jpg|png|webp)$/;
-
-/** Public URL of a stored cover. Change the route here and nowhere else. */
-export function coverUrl(key: string): string {
-  return `/covers/${key}`;
-}
+const NAME_PATTERN = /^[0-9a-f]{32}\.(jpg|png|webp)$/;
 
 export type CoverError = "coverType" | "coverTooBig";
 
@@ -37,7 +36,7 @@ export async function storeCover(
   const name = Array.from(random, (b) => b.toString(16).padStart(2, "0")).join(
     "",
   );
-  const key = `${name}.${EXTENSIONS[file.type]}`;
+  const key = `covers/${name}.${EXTENSIONS[file.type]}`;
   await env.COVERS.put(key, await file.arrayBuffer(), {
     httpMetadata: { contentType: file.type },
   });
@@ -45,14 +44,14 @@ export async function storeCover(
 }
 
 /** Reads a cover for the public route; null for a malformed or unknown key. */
-export async function readCover(env: Pick<Env, "COVERS">, key: string) {
-  if (!KEY_PATTERN.test(key)) return null;
-  const object = await env.COVERS.get(key);
+export async function readCover(env: Pick<Env, "COVERS">, name: string) {
+  if (!NAME_PATTERN.test(name)) return null;
+  const object = await env.COVERS.get(`covers/${name}`);
   if (!object) return null;
   return {
     body: object.body,
     contentType:
       object.httpMetadata?.contentType ??
-      TYPES_BY_EXTENSION[key.split(".")[1] as string],
+      TYPES_BY_EXTENSION[name.split(".")[1] as string],
   };
 }

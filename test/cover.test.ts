@@ -53,10 +53,10 @@ describe("publishing with a cover photo", () => {
     const res = await publish(cookie, schoolId, webp());
     expect(res.status).toBe(302);
     const key = await coverKeyOf(storyIdFrom(res));
-    expect(key).toMatch(/^[0-9a-f]{32}\.webp$/);
+    expect(key).toMatch(/^covers\/[0-9a-f]{32}\.webp$/);
 
     // No cookie: the route is outside the login wall.
-    const img = await exports.default.fetch(`${ORIGIN}/covers/${key}`);
+    const img = await exports.default.fetch(`${ORIGIN}/${key}`);
     expect(img.status).toBe(200);
     expect(img.headers.get("content-type")).toBe("image/webp");
     expect(img.headers.get("cache-control")).toContain("public");
@@ -119,11 +119,11 @@ describe("GET /covers/:key", () => {
 describe("cover on pages", () => {
   it("shows the cover on the Story page", async () => {
     const { cookie } = await signInAs();
-    const key = `${"a".repeat(32)}.webp`;
+    const key = `covers/${"a".repeat(32)}.webp`;
     const { story } = await createStory({ coverKey: key });
     const res = await exports.default.fetch(`${ORIGIN}/stories/${story.id}`, {
       headers: { cookie },
     });
-    expect(await res.text()).toContain(`/covers/${key}`);
+    expect(await res.text()).toContain(`/${key}`);
   });
 });

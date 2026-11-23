@@ -8,7 +8,7 @@ import type { Route } from "./+types/covers";
  */
 export async function loader({ context, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const cover = await readCover(env, params.key);
+  const cover = await readCover(env, params.name);
   if (!cover) throw new Response("Not Found", { status: 404 });
   return new Response(cover.body, {
     headers: {

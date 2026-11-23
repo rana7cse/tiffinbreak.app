@@ -119,6 +119,18 @@ export const strings = {
     placeholder: "গল্পগুলো শিগগিরই এখানে আসছে।",
     myDiary: "আমার ডায়েরি",
     newStories: "নতুন গল্প",
+    emptyTitle: "ডায়েরির প্রথম পাতাটা এখনো খালি",
+    emptyLead: "স্কুলের কোন গল্পটা দিয়ে শুরু করবে?",
+    writeFirst: "প্রথম গল্পটা লিখি",
+    loadOlder: "আরও পুরোনো গল্প",
+    share: "শেয়ার",
+    time: {
+      justNow: "এইমাত্র",
+      minutesAgo: (n: string) => `${n} মিনিট আগে`,
+      hoursAgo: (n: string) => `${n} ঘণ্টা আগে`,
+      yesterday: "গতকাল",
+      daysAgo: (n: string) => `${n} দিন আগে`,
+    },
   },
 
   write: {
@@ -162,6 +174,10 @@ export const strings = {
     loveBoxTitle: "গল্পটা ছুঁয়ে গেলে একটু ভালোবাসা দাও",
     loveCount: "ভালোবাসা",
     sendToFriends: "বন্ধুদের পাঠাও",
+    linkCopied: "লিংক কপি হয়েছে",
+    copyLink: "লিংকটা কপি করে বন্ধুদের পাঠাও",
+    shareDescription: (firstName: string) =>
+      `${firstName}র লেখা একটা গল্প। টিফিনব্রেকে লগইন করে পড়ো।`,
     moreFrom: (name: string) => `${name}র আরও গল্প পড়ো`,
     months: [
       "জানুয়ারি",
