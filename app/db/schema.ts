@@ -217,3 +217,24 @@ export const love = sqliteTable(
     check("love_count_range", sql`${t.count} between 1 and 10`),
   ],
 );
+
+/**
+ * A Report (see GLOSSARY.md): one reader's flag on a Story, at most one per
+ * reader per Story. At 3 Reports the Story is hidden.
+ */
+export const report = sqliteTable(
+  "report",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reason: text("reason"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.readerId] })],
+);

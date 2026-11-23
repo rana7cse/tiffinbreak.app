@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "72530b8d-b1be-4001-806f-38a585aeddd8",
+  "id": "5f267640-6ffc-4cc6-97ff-025d2d2ddb25",
   "prevId": "8ffb749a-841b-48b9-95ee-cd9f55b7f7fa",
   "tables": {
     "account": {
@@ -152,8 +152,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "love": {
-      "name": "love",
+    "report": {
+      "name": "report",
       "columns": {
         "story_id": {
           "name": "story_id",
@@ -169,11 +169,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "count": {
-          "name": "count",
-          "type": "integer",
+        "reason": {
+          "name": "reason",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
@@ -183,21 +183,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(cast(unixepoch('subsecond') * 1000 as integer))"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(cast(unixepoch('subsecond') * 1000 as integer))"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "love_story_id_story_id_fk": {
-          "name": "love_story_id_story_id_fk",
-          "tableFrom": "love",
+        "report_story_id_story_id_fk": {
+          "name": "report_story_id_story_id_fk",
+          "tableFrom": "report",
           "tableTo": "story",
           "columnsFrom": [
             "story_id"
@@ -208,9 +200,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "love_reader_id_user_id_fk": {
-          "name": "love_reader_id_user_id_fk",
-          "tableFrom": "love",
+        "report_reader_id_user_id_fk": {
+          "name": "report_reader_id_user_id_fk",
+          "tableFrom": "report",
           "tableTo": "user",
           "columnsFrom": [
             "reader_id"
@@ -223,21 +215,16 @@
         }
       },
       "compositePrimaryKeys": {
-        "love_story_id_reader_id_pk": {
+        "report_story_id_reader_id_pk": {
           "columns": [
             "story_id",
             "reader_id"
           ],
-          "name": "love_story_id_reader_id_pk"
+          "name": "report_story_id_reader_id_pk"
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {
-        "love_count_range": {
-          "name": "love_count_range",
-          "value": "\"love\".\"count\" between 1 and 10"
-        }
-      }
+      "checkConstraints": {}
     },
     "school": {
       "name": "school",
