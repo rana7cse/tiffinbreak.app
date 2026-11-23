@@ -51,6 +51,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 }
 
 export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
+  const writerHref = s.writer.handle
+    ? `/writers/${s.writer.handle}`
+    : "/profile";
   const firstName = s.writer.name.split(/\s+/)[0] ?? s.writer.name;
   return (
     <>
@@ -86,7 +89,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
         <h1 className="tb-h1">{s.title}</h1>
 
         <a
-          href="/profile"
+          href={writerHref}
           style={{
             display: "flex",
             alignItems: "center",
@@ -162,7 +165,7 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
 
         <a
           className="tb-row"
-          href="/profile"
+          href={writerHref}
           style={{ marginTop: 24, padding: 16, boxShadow: "var(--tb-shadow)" }}
         >
           <Avatar name={s.writer.name} image={s.writer.image} />

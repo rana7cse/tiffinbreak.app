@@ -1,4 +1,4 @@
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { signInAs } from "./helpers/session";
 
@@ -46,9 +46,12 @@ describe("signed-in app shell", () => {
     );
   });
 
-  it("serves a profile placeholder inside the shell", async () => {
-    const { cookie } = await signInAs();
-    const html = await getHtml("/profile", cookie);
+  it("marks Profile active on the Writer's own profile page", async () => {
+    const { cookie, writer } = await signInAs();
+    await env.DB.prepare("UPDATE user SET handle = 'rafi' WHERE id = ?")
+      .bind(writer.id)
+      .run();
+    const html = await getHtml("/writers/rafi", cookie);
 
     expect(navItem(html, "/profile")).toContain('aria-current="page"');
   });

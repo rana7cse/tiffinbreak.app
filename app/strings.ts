@@ -167,6 +167,10 @@ export const strings = {
     profileOf: (name: string) => `${name} এর প্রোফাইল`,
     myStories: "আমার গল্পগুলো",
     shareProfile: "প্রোফাইল শেয়ার করো",
+    storiesOf: (name: string) => `${name}র গল্পগুলো`,
+    storiesWritten: "টা গল্প লিখেছে",
+    loveReceived: "ভালোবাসা পেয়েছে",
+    noStories: "এখনো কোনো গল্প নেই।",
   },
 
   school: {
