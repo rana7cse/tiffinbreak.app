@@ -1,4 +1,5 @@
 import { cloudflareContext } from "~/context";
+import { overLimit, tooManyRequestsJson } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import { findOrCreateSchool, suggestSchools } from "~/lib/schools";
 import type { Route } from "./+types/schools";
@@ -16,8 +17,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 /** POST /schools (form field `name`): find or create a School. Login-walled. */
 export async function action({ request, context }: Route.ActionArgs) {
-  await requireWriter({ request, context });
+  const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
+  if (await overLimit(env, "school", user.id)) return tooManyRequestsJson();
   const form = await request.formData();
   const name = form.get("name");
   const school =

@@ -13,6 +13,7 @@ import {
   NAME_MAX,
   validateHandle,
 } from "~/lib/handle";
+import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import { handleTaken, updateWriterProfile } from "~/lib/writers";
@@ -89,6 +90,17 @@ export async function action({ request, context }: Route.ActionArgs) {
       { status: 400 },
     );
   if (Object.keys(errors).length > 0) return failed(errors);
+  if (avatar && (await overLimit(env, "upload", me.id))) {
+    return data(
+      {
+        errors: {
+          avatar: `${strings.errors.rateLimited} ${strings.errors.tryAgainLater}`,
+        },
+        values: { name: field("name"), handle: field("handle") },
+      },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
 
   const image = avatar ? `/${await storeCover(env, avatar)}` : undefined;
   const saved = await updateWriterProfile(env, me.id, {

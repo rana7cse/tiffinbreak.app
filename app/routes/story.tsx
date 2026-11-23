@@ -7,6 +7,7 @@ import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
 import { getMyLove } from "~/lib/love";
+import { overLimit, tooManyRequestsText } from "~/lib/rate-limit";
 import { getWriter, requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
@@ -63,6 +64,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
   if (found.writer.id === user.id) {
     throw new Response("Forbidden", { status: 403 });
+  }
+  if (await overLimit(env, "report", user.id)) {
+    throw tooManyRequestsText();
   }
   const raw = form.get("reason");
   const reason = typeof raw === "string" ? raw.trim().slice(0, 500) : "";

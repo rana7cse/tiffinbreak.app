@@ -6,11 +6,12 @@ import { StoryForm } from "~/components/story-form";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
 import { storeCover } from "~/lib/cover";
+import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import { publishStory } from "~/lib/stories";
 import { clearDraft, loadDraft, saveDraft, wordCount } from "~/lib/story-draft";
-import { parseStoryForm } from "~/lib/story-form";
+import { parseStoryForm, storyFormRateLimited } from "~/lib/story-form";
 import { strings } from "~/strings";
 import type { Route } from "./+types/write";
 
@@ -33,12 +34,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
-  const parsed = await parseStoryForm(env, await request.formData());
+  const form = await request.formData();
+  if (await overLimit(env, "publish", user.id)) {
+    return storyFormRateLimited(form);
+  }
+  const parsed = await parseStoryForm(env, form);
   if (!parsed.ok) {
     return data(
       { errors: parsed.errors, values: parsed.values },
       { status: 400 },
     );
+  }
+  if (parsed.cover && (await overLimit(env, "upload", user.id))) {
+    return storyFormRateLimited(form, "cover");
   }
 
   const coverKey = parsed.cover ? await storeCover(env, parsed.cover) : null;
