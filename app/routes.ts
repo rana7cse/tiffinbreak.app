@@ -10,6 +10,7 @@ export default [
   route("schools", "routes/schools.ts"),
   route("schools/:id", "routes/school.tsx"),
   route("stories/:id", "routes/story.tsx"),
+  route("stories/:id/edit", "routes/story-edit.tsx"),
   route("stories/:id/love", "routes/story-love.ts"),
   route("covers/:name", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),

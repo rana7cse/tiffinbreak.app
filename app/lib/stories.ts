@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db";
 import { report, school, story, user } from "~/db/schema";
+import { deleteCover, storeCover } from "~/lib/cover";
 import { strings } from "~/strings";
 import { bn } from "./bangla-digits";
 
@@ -99,6 +100,51 @@ export async function publishStory(
     .values({ id, ...input });
   await bumpFeedVersion(env.CACHE);
   return id;
+}
+
+/** Only the Writer of a Story may edit or delete it. */
+export function canEditStory(
+  s: Pick<StoryView, "writer">,
+  reader: { id: string },
+): boolean {
+  return s.writer.id === reader.id;
+}
+
+/**
+ * Updates a Story's title, body, School and cover, then invalidates the Feed
+ * cache. `cover` stores a new cover; `removeCover` clears it; otherwise the
+ * current cover stays. A replaced or removed cover's R2 object is deleted.
+ */
+export async function updateStory(
+  env: Pick<Env, "DB" | "CACHE" | "COVERS">,
+  current: Pick<StoryView, "id" | "coverKey">,
+  input: {
+    title: string;
+    body: string;
+    schoolId: string;
+    cover: File | null;
+    removeCover: boolean;
+  },
+): Promise<void> {
+  const { cover, removeCover, ...fields } = input;
+  const newKey = cover ? await storeCover(env, cover) : null;
+  const coverKey = newKey ?? (removeCover ? null : current.coverKey);
+  await getDb(env.DB)
+    .update(story)
+    .set({ ...fields, coverKey })
+    .where(eq(story.id, current.id));
+  if (coverKey !== current.coverKey) await deleteCover(env, current.coverKey);
+  await bumpFeedVersion(env.CACHE);
+}
+
+/** Deletes a Story with its cover, then invalidates the Feed cache. */
+export async function deleteStory(
+  env: Pick<Env, "DB" | "CACHE" | "COVERS">,
+  current: Pick<StoryView, "id" | "coverKey">,
+): Promise<void> {
+  await getDb(env.DB).delete(story).where(eq(story.id, current.id));
+  await deleteCover(env, current.coverKey);
+  await bumpFeedVersion(env.CACHE);
 }
 
 /**

@@ -43,6 +43,19 @@ export async function storeCover(
   return key;
 }
 
+/** Removes a cover from R2. Best effort: an orphan object is harmless. */
+export async function deleteCover(
+  env: Pick<Env, "COVERS">,
+  key: string | null,
+): Promise<void> {
+  if (!key) return;
+  try {
+    await env.COVERS.delete(key);
+  } catch (error) {
+    console.error("cover: delete failed", error);
+  }
+}
+
 /** Reads a cover for the public route; null for a malformed or unknown key. */
 export async function readCover(env: Pick<Env, "COVERS">, name: string) {
   if (!NAME_PATTERN.test(name)) return null;
