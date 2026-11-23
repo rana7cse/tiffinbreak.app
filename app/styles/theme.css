@@ -147,7 +147,7 @@ img, svg { display: block; }
   cursor: pointer;
   transition: transform .12s ease, box-shadow .12s ease;
 }
-.tb-btn:hover { color: inherit; }
+.tb-btn:hover { color: var(--tb-ink); }
 .tb-btn:active { transform: translateY(3px); box-shadow: 0 0 0 var(--tb-ink) !important; }
 .tb-btn--primary { background: var(--tb-accent); color: #fff; }
 .tb-btn--primary:hover { color: #fff; }
