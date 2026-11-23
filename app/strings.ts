@@ -212,6 +212,9 @@ export const strings = {
     loveReceived: "ভালোবাসা পেয়েছে",
     noStories: "এখনো কোনো গল্প নেই।",
     editProfile: "প্রোফাইল এডিট করো",
+    emptyTitle: "তোমার এখনো কোনো গল্প নেই",
+    emptyLead: "স্কুলের একটা স্মৃতি লিখে প্রথম গল্পটা পোস্ট করো!",
+    writeStory: "গল্প লিখি",
   },
 
   editProfile: {

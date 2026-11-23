@@ -1,7 +1,9 @@
 import { BottomNav, withNavShell } from "~/components/app-shell";
 import { Avatar } from "~/components/avatar";
+import { DiaryArt } from "~/components/diary-empty-state";
 import {
   BackIcon,
+  PenIcon,
   SchoolIcon,
   ShareIcon,
   StoryTileIcon,
@@ -93,6 +95,41 @@ function StoryRow({
   );
 }
 
+function EmptyStories({ own }: { own: boolean }) {
+  if (!own) return <p className="tb-lead">{t.noStories}</p>;
+  return (
+    <section className="tb-card tb-card--pad" style={{ paddingBottom: 20 }}>
+      <DiaryArt />
+      <p
+        className="tb-display"
+        style={{
+          marginTop: 10,
+          textAlign: "center",
+          fontSize: 23,
+          lineHeight: 1.35,
+          color: "var(--tb-board)",
+        }}
+      >
+        {t.emptyTitle}
+      </p>
+      <p
+        className="tb-lead"
+        style={{ margin: "4px 0 18px", textAlign: "center", lineHeight: 1.6 }}
+      >
+        {t.emptyLead}
+      </p>
+      <a
+        className="tb-btn tb-btn--primary tb-btn--block"
+        href="/write"
+        style={{ minHeight: 52, borderRadius: 14 }}
+      >
+        <PenIcon size={18} color="#FFFFFF" />
+        {t.writeStory}
+      </a>
+    </section>
+  );
+}
+
 export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
   const firstName = p.name.split(/\s+/)[0] ?? p.name;
   return (
@@ -121,12 +158,29 @@ export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Avatar name={p.name} image={p.image} size="lg" />
           <div style={{ minWidth: 0 }}>
-            <h1
-              className="tb-display"
-              style={{ fontSize: 26, lineHeight: 1.2 }}
-            >
-              {p.name}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <h1
+                className="tb-display"
+                style={{
+                  fontSize: 26,
+                  lineHeight: 1.2,
+                  minWidth: 0,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {p.name}
+              </h1>
+              {p.own ? (
+                <a
+                  className="tb-icon-btn"
+                  href="/profile/edit"
+                  aria-label={t.editProfile}
+                  style={{ flexShrink: 0 }}
+                >
+                  <PenIcon size={20} color="var(--tb-ink)" />
+                </a>
+              ) : null}
+            </div>
             <p className="tb-meta" style={{ fontSize: 15 }}>
               {`@${p.handle}`}
             </p>
@@ -170,22 +224,21 @@ export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
             ))}
           </div>
         ) : (
-          <p className="tb-lead">{t.noStories}</p>
+          <EmptyStories own={p.own} />
         )}
 
         {p.own ? (
-          <a
-            className="tb-btn tb-btn--pill"
-            href="/profile/edit"
-            style={{ marginTop: 32 }}
-          >
-            {t.editProfile}
-          </a>
-        ) : null}
-
-        {p.own ? (
-          <form method="post" action="/logout" style={{ marginTop: 32 }}>
-            <button className="tb-btn tb-btn--pill" type="submit">
+          <form method="post" action="/logout" style={{ marginTop: 48 }}>
+            <button
+              className="tb-btn tb-btn--pill"
+              type="submit"
+              style={{
+                background: "transparent",
+                color: "var(--tb-ink-soft, var(--tb-ink))",
+                boxShadow: "none",
+                opacity: 0.8,
+              }}
+            >
               {strings.nav.logout}
             </button>
           </form>
