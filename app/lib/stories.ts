@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db";
-import { school, story, user } from "~/db/schema";
+import { report, school, story, user } from "~/db/schema";
 import { strings } from "~/strings";
 import { bn } from "./bangla-digits";
 
@@ -92,4 +92,74 @@ export async function publishStory(
     .insert(story)
     .values({ id, ...input });
   return id;
+}
+
+/**
+ * The shared "exclude hidden" rule: every Story list (Feed, School, profile)
+ * must put this in its `where`. Hidden Stories are for the Writer and Admins
+ * only (see `canReadStory`).
+ */
+export const visibleStory = eq(story.hidden, false);
+
+export const REPORTS_TO_HIDE = 3;
+const FEED_VERSION_KEY = "feed:version";
+
+/** Feed cache keys embed this version; bumping it orphans every cached Feed. */
+export async function readFeedVersion(cache: KVNamespace): Promise<string> {
+  try {
+    return (await cache.get(FEED_VERSION_KEY)) ?? "0";
+  } catch {
+    return "0";
+  }
+}
+
+async function bumpFeedVersion(cache: KVNamespace) {
+  try {
+    await cache.put(FEED_VERSION_KEY, crypto.randomUUID());
+  } catch (error) {
+    console.error("stories: feed cache invalidation failed", error);
+  }
+}
+
+/** Whether `readerId` has already Reported the Story. */
+export async function hasReported(
+  env: Pick<Env, "DB">,
+  storyId: string,
+  readerId: string,
+): Promise<boolean> {
+  const row = await getDb(env.DB)
+    .select({ s: report.storyId })
+    .from(report)
+    .where(and(eq(report.storyId, storyId), eq(report.readerId, readerId)))
+    .get();
+  return !!row;
+}
+
+/**
+ * Records a Report. A repeat by the same reader changes nothing. The count is
+ * incremented only when the Report row was newly inserted, and the Story is
+ * hidden (and the Feed cache invalidated) once it reaches REPORTS_TO_HIDE.
+ */
+export async function reportStory(
+  env: Pick<Env, "DB" | "CACHE">,
+  storyId: string,
+  readerId: string,
+  reason: string | null,
+): Promise<void> {
+  const db = getDb(env.DB);
+  const inserted = await db
+    .insert(report)
+    .values({ storyId, readerId, reason })
+    .onConflictDoNothing()
+    .returning({ s: report.storyId });
+  if (!inserted[0]) return;
+  const updated = await db
+    .update(story)
+    .set({
+      reportCount: sql`${story.reportCount} + 1`,
+      hidden: sql`(${story.reportCount} + 1 >= ${REPORTS_TO_HIDE}) or ${story.hidden}`,
+    })
+    .where(eq(story.id, storyId))
+    .returning({ hidden: story.hidden });
+  if (updated[0]?.hidden) await bumpFeedVersion(env.CACHE);
 }

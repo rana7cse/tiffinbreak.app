@@ -1,3 +1,4 @@
+import { Form, redirect } from "react-router";
 import { Avatar } from "~/components/avatar";
 import {
   BackIcon,
@@ -13,8 +14,10 @@ import {
   canReadStory,
   formatStoryDate,
   getStoryById,
+  hasReported,
   paragraphs,
   readingTimeMinutes,
+  reportStory,
 } from "~/lib/stories";
 import { strings } from "~/strings";
 import type { Route } from "./+types/story";
@@ -28,6 +31,26 @@ export const handle = {
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [{ title: strings.meta.pageTitle(loaderData?.title ?? t.readTitle) }];
+}
+
+export async function action({ request, context, params }: Route.ActionArgs) {
+  const { user } = await requireWriter({ request, context });
+  const { env } = context.get(cloudflareContext);
+  const found = await getStoryById(env, params.id);
+  if (!found || !canReadStory(found, user as { id: string; role?: string })) {
+    throw new Response("Not Found", { status: 404 });
+  }
+  const form = await request.formData();
+  if (form.get("intent") !== "report") {
+    throw new Response("Bad Request", { status: 400 });
+  }
+  if (found.writer.id === user.id) {
+    throw new Response("Forbidden", { status: 403 });
+  }
+  const raw = form.get("reason");
+  const reason = typeof raw === "string" ? raw.trim().slice(0, 500) : "";
+  await reportStory(env, found.id, user.id, reason || null);
+  return redirect(`/stories/${found.id}`, 303);
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -47,6 +70,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     minutes: readingTimeMinutes(found.body),
     writer: found.writer,
     school: found.school,
+    canReport: found.writer.id !== user.id,
+    reported: await hasReported(env, found.id, user.id),
   };
 }
 
@@ -159,6 +184,57 @@ export default function StoryPage({ loaderData: s }: Route.ComponentProps) {
             <span>{bn(s.loveTotal)}</span> {t.loveCount} · {strings.love.hint}
           </p>
         </section>
+
+        {s.canReport ? (
+          <div style={{ marginTop: 20, textAlign: "center" }}>
+            {s.reported ? (
+              <p className="tb-link" style={{ textDecoration: "none" }}>
+                {strings.report.done}
+              </p>
+            ) : (
+              <details>
+                <summary
+                  className="tb-link"
+                  style={{ cursor: "pointer", listStyle: "none" }}
+                >
+                  {strings.report.action}
+                </summary>
+                <Form
+                  method="post"
+                  className="tb-card"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    padding: 16,
+                    marginTop: 8,
+                    textAlign: "left",
+                  }}
+                >
+                  <input type="hidden" name="intent" value="report" />
+                  <p style={{ fontWeight: 600 }}>
+                    {strings.report.confirmTitle}
+                  </p>
+                  <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>
+                    {strings.report.confirmHint}
+                  </p>
+                  <label className="tb-label" htmlFor="report-reason">
+                    {strings.report.reasonLabel}
+                  </label>
+                  <input
+                    id="report-reason"
+                    name="reason"
+                    className="tb-input"
+                    maxLength={500}
+                  />
+                  <button type="submit" className="tb-btn tb-btn--dark">
+                    {strings.report.submit}
+                  </button>
+                </Form>
+              </details>
+            )}
+          </div>
+        ) : null}
 
         <a
           className="tb-row"
