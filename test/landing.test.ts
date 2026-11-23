@@ -68,11 +68,35 @@ describe("landing page", () => {
     const { html } = await getHtml("/");
     const bottom = html.slice(html.indexOf('id="how"'));
 
-    expect(bottom).toMatch(
-      /<a [^>]*href="\/login"[^>]*tb-btn|<a [^>]*tb-btn[^>]*href="\/login"/,
-    );
+    expect(bottom).toMatch(/<a [^>]*tb-btn[^>]*href="\/login\?intent=write"/);
     expect(bottom).not.toContain('action="/login/google"');
     expect(bottom).not.toContain('action="/login/facebook"');
+  });
+});
+
+describe("GET /login?intent=write", () => {
+  const writeTitle = "তোমার গল্প লিখতে লগইন করো";
+
+  it("shows the write heading and line with both providers", async () => {
+    const { html } = await getHtml("/login?intent=write");
+
+    expect(html).toContain(writeTitle);
+    expect(html).toContain("গুগল বা ফেসবুক দিয়ে এক ট্যাপে লগইন করো");
+    expect(html).toContain('action="/login/google"');
+    expect(html).toContain('action="/login/facebook"');
+    expect(html).toContain('value="/feed"');
+  });
+
+  it("stays the plain login page without intent", async () => {
+    const { html } = await getHtml("/login");
+
+    expect(html).not.toContain(writeTitle);
+  });
+
+  it("stays the plain login page for an unknown intent", async () => {
+    const { html } = await getHtml("/login?intent=bogus");
+
+    expect(html).not.toContain(writeTitle);
   });
 });
 

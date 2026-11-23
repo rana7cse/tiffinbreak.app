@@ -241,7 +241,7 @@ export default function Home() {
         </p>
         <a
           className="tb-btn tb-btn--primary tb-btn--lg tb-btn--block tb-btn--on-board"
-          href="/login"
+          href="/login?intent=write"
         >
           <PenIcon size={20} color="#FFFFFF" />
           {t.ctaButton}

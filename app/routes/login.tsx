@@ -32,14 +32,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   );
   // Already signed in: skip the login screen.
   if (await getWriter({ request, context })) throw redirect(returnTo);
-  return { returnTo };
+  const intent = new URL(request.url).searchParams.get("intent");
+  return { returnTo, write: intent === "write" };
 }
 
 export default function Login({ loaderData }: Route.ComponentProps) {
   return (
     <main className="tb-section">
-      <h1 className="tb-h2">{t.title}</h1>
-      <p className="tb-lead">{t.lead}</p>
+      <h1 className="tb-h2">{loaderData.write ? t.writeTitle : t.title}</h1>
+      <p className="tb-lead">{loaderData.write ? t.writeLead : t.lead}</p>
       <div className="tb-stack" style={{ gap: 12, marginTop: 22 }}>
         {providers.map((p) => (
           <form
