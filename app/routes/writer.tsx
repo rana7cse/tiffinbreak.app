@@ -71,7 +71,7 @@ function StoryRow({
       <div style={{ minWidth: 0 }}>
         <h3 className="tb-row__title">{s.title}</h3>
         <p className="tb-meta" style={{ marginTop: 6 }}>
-          {s.date} · {bn(s.loveTotal)} {strings.story.loveCount}
+          {`${s.date} · ${bn(s.loveTotal)} ${strings.story.loveCount}`}
         </p>
       </div>
     </a>

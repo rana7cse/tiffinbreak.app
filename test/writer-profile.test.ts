@@ -71,8 +71,8 @@ describe("Writer profile (GET /writers/:handle)", () => {
     expect(html).toMatch(/tb-stat__num">৮২</);
     expect(html).toContain("ভালোবাসা পেয়েছে");
     // Schools derived from Stories, each once
-    expect(html.match(/রূপনগর হাই স্কুল/g)).toHaveLength(1);
-    expect(html).toContain("ঢাকা কলেজ");
+    // (the rendered line, not the hydration payload)
+    expect(html).toContain("ঢাকা কলেজ، রূপনগর হাই স্কুল</p>");
     expect(html).toContain("২১ নভেম্বর · ৫৮ ভালোবাসা");
     // newest first
     expect(html.indexOf("নতুন গল্প")).toBeLessThan(html.indexOf("আরেকটা পুরোনো"));

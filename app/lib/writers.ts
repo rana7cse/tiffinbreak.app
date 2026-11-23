@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "~/db";
 import { school, story, user } from "~/db/schema";
+import { visibleStory } from "./stories";
 
 export type ProfileStory = {
   id: string;
@@ -60,7 +61,7 @@ export async function getWriterProfile(
     .where(
       seesHidden
         ? eq(story.writerId, writer.id)
-        : and(eq(story.writerId, writer.id), eq(story.hidden, false)),
+        : and(eq(story.writerId, writer.id), visibleStory),
     )
     .orderBy(desc(story.createdAt))
     .all();
