@@ -156,6 +156,10 @@ export const strings = {
     loveBoxTitle: "গল্পটা ছুঁয়ে গেলে একটু ভালোবাসা দাও",
     loveCount: "ভালোবাসা",
     sendToFriends: "বন্ধুদের পাঠাও",
+    linkCopied: "লিংক কপি হয়েছে",
+    copyLink: "লিংকটা কপি করে বন্ধুদের পাঠাও",
+    shareDescription: (firstName: string) =>
+      `${firstName}র লেখা একটা গল্প। টিফিনব্রেকে লগইন করে পড়ো।`,
     moreFrom: (name: string) => `${name}র আরও গল্প পড়ো`,
     months: [
       "জানুয়ারি",
