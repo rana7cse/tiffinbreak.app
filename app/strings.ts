@@ -210,6 +210,30 @@ export const strings = {
     storiesWritten: "টা গল্প লিখেছে",
     loveReceived: "ভালোবাসা পেয়েছে",
     noStories: "এখনো কোনো গল্প নেই।",
+    editProfile: "প্রোফাইল এডিট করো",
+  },
+
+  editProfile: {
+    title: "প্রোফাইল এডিট",
+    nameLabel: "তোমার নাম",
+    handleLabel: "হ্যান্ডেল",
+    handleHint: (min: string, max: string) =>
+      `ইংরেজি ছোট হাতের অক্ষর, সংখ্যা আর _ দিয়ে ${min} থেকে ${max} অক্ষর।`,
+    avatarLabel: "প্রোফাইল ছবি",
+    avatarChange: "ছবি বদলাও",
+    save: "সেভ করো",
+    saving: "সেভ হচ্ছে…",
+    cancel: "থাক",
+    errors: {
+      nameRequired: "নাম খালি রাখা যাবে না।",
+      nameTooLong: (max: string) => `নাম সর্বোচ্চ ${max} অক্ষরের হতে পারবে।`,
+      handleLength: (min: string, max: string) =>
+        `হ্যান্ডেল ${min} থেকে ${max} অক্ষরের মধ্যে হতে হবে, এটা ছোট বা বড় হয়ে গেছে।`,
+      handleChars: "হ্যান্ডেলে শুধু ইংরেজি ছোট হাতের অক্ষর, সংখ্যা আর _ চলবে।",
+      handleTaken: "হ্যান্ডেলটা আগেই কেউ নিয়ে নিয়েছে। অন্যটা বেছে নাও।",
+      avatarType: "ছবি JPG, PNG বা WebP হতে হবে।",
+      avatarTooBig: (max: string) => `ছবি সর্বোচ্চ ${max} মেগাবাইটের হতে পারবে।`,
+    },
   },
 
   school: {

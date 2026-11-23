@@ -11,6 +11,7 @@ export default [
   route("stories/:id", "routes/story.tsx"),
   route("covers/:name", "routes/covers.ts"),
   route("profile", "routes/profile.tsx"),
+  route("profile/edit", "routes/profile-edit.tsx"),
   route("writers/:handle", "routes/writer.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("data-deletion", "routes/data-deletion.tsx"),

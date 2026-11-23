@@ -20,6 +20,26 @@ export function slugifyHandle(name: string): string {
   return slug || FALLBACK;
 }
 
+export const HANDLE_MIN = 3;
+export const HANDLE_MAX = MAX_LENGTH;
+export const NAME_MAX = 60;
+
+export type HandleError = "handleLength" | "handleChars";
+
+/** What a Writer typed as a handle, normalised: trimmed, no "@", lowercase. */
+export function cleanHandle(raw: string): string {
+  return raw.trim().replace(/^@/, "").toLowerCase();
+}
+
+/** Why a (cleaned) handle is unusable, or null. Safe charset: a-z, 0-9, _. */
+export function validateHandle(handle: string): HandleError | null {
+  if (!/^[a-z0-9_]*$/.test(handle)) return "handleChars";
+  if (handle.length < HANDLE_MIN || handle.length > HANDLE_MAX) {
+    return "handleLength";
+  }
+  return null;
+}
+
 /** A free handle for `name`: the slug, then slug2, slug3, ... on collision. */
 export async function generateHandle(db: Db, name: string): Promise<string> {
   const base = slugifyHandle(name);
