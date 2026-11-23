@@ -26,8 +26,9 @@ export const appMeta = sqliteTable("app_meta", {
  *
  * A Writer (see GLOSSARY.md) is a row in `user`: Better Auth requires that
  * table name, and "user" stays out of UI copy. Name and avatar (`image`) are
- * copied from the provider on first sign-in; handle and role are added by
- * later tickets. Timestamps are stored as integer milliseconds.
+ * copied from the provider on first sign-in. `handle` is the unique public
+ * @handle (generated on first sign-in, see app/lib/handle.ts); `role` is
+ * `writer` or `admin`. Timestamps are stored as integer milliseconds.
  */
 const nowMs = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
 
@@ -39,6 +40,12 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   image: text("image"),
+  // Nullable only because SQLite cannot add a NOT NULL column without a
+  // default; the sign-in hook and the 0002 backfill leave no Writer without one.
+  handle: text("handle").unique(),
+  role: text("role", { enum: ["writer", "admin"] })
+    .default("writer")
+    .notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(nowMs)
     .notNull(),
