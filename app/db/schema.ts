@@ -128,29 +128,17 @@ export const verification = sqliteTable(
 
 /**
  * A School (see GLOSSARY.md): a school or college Stories are about.
- * `normalizedName` is the NFC/trimmed/whitespace-collapsed name (see
- * `normalizeSchoolName`); it is unique among Schools that have not been
- * merged away. `mergedIntoId` is set when an Admin folds a duplicate in.
+ * `name` is stored already normalised (see `normalizeSchoolName`) and is unique.
  */
-export const school = sqliteTable(
-  "school",
-  {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
-    normalizedName: text("normalized_name").notNull(),
-    /** Optional English name, only used so English queries find the School. */
-    nameEn: text("name_en"),
-    mergedIntoId: text("merged_into_id"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(nowMs)
-      .notNull(),
-  },
-  (t) => [
-    uniqueIndex("school_normalized_name_unique")
-      .on(t.normalizedName)
-      .where(sql`${t.mergedIntoId} is null`),
-  ],
-);
+export const school = sqliteTable("school", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  /** Optional English name, only used so English queries find the School. */
+  nameEn: text("name_en"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .default(nowMs)
+    .notNull(),
+});
 
 /**
  * A Story (see GLOSSARY.md): a short memory by a Writer about one School.
