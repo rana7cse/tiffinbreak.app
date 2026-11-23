@@ -37,6 +37,20 @@ describe("Story page (GET /stories/:id)", () => {
       expect(html).toContain(`value="/stories/${story.id}"`);
     });
 
+    it("redirects a logged-out POST to login", async () => {
+      const { story } = await createStory();
+      const res = await exports.default.fetch(
+        `http://example.com/stories/${story.id}`,
+        {
+          method: "POST",
+          body: new URLSearchParams({ intent: "report" }),
+          redirect: "manual",
+        },
+      );
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toContain("/login?returnTo=");
+    });
+
     it("omits og:image when the Story has no cover", async () => {
       const { story } = await createStory();
       const html = await (await get(story.id)).text();

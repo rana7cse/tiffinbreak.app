@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 import {
   index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
@@ -186,4 +187,25 @@ export const story = sqliteTable(
     index("story_school_created_at_idx").on(t.schoolId, t.createdAt),
     index("story_writer_created_at_idx").on(t.writerId, t.createdAt),
   ],
+);
+
+/**
+ * A Report (see GLOSSARY.md): one reader's flag on a Story, at most one per
+ * reader per Story. At 3 Reports the Story is hidden.
+ */
+export const report = sqliteTable(
+  "report",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reason: text("reason"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.readerId] })],
 );

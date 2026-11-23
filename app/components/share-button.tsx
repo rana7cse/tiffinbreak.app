@@ -30,6 +30,7 @@ export function ShareButton({
   children: ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
+  const [shownUrl, setShownUrl] = useState<string | null>(null);
 
   async function share() {
     const url = new URL(path, window.location.origin).toString();
@@ -44,10 +45,11 @@ export function ShareButton({
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      window.prompt(strings.story.copyLink, url);
+      setCopied(false);
     }
+    // Always show the link, so it can be copied by hand if needed.
+    setShownUrl(url);
   }
 
   return (
@@ -61,9 +63,35 @@ export function ShareButton({
       >
         {children}
       </button>
-      <span role="status" aria-live="polite" style={srOnly}>
-        {copied ? strings.story.linkCopied : ""}
-      </span>
+      {shownUrl ? (
+        <div
+          className="tb-card"
+          style={{
+            position: "fixed",
+            left: 16,
+            right: 16,
+            bottom: 88,
+            zIndex: 20,
+            padding: 12,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <input
+            className="tb-input"
+            readOnly
+            value={shownUrl}
+            aria-label={strings.story.copyLink}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <span role="status" aria-live="polite" style={{ fontSize: 14 }}>
+            {copied ? strings.story.linkCopied : strings.story.copyLink}
+          </span>
+        </div>
+      ) : (
+        <span role="status" aria-live="polite" style={srOnly} />
+      )}
     </>
   );
 }
