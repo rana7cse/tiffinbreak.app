@@ -203,6 +203,8 @@ export const strings = {
   },
 
   school: {
+    storyCount: (n: string) => `${n}টা গল্প`,
+    noStories: "এই স্কুল বা কলেজের কোনো গল্প এখনো লেখা হয়নি।",
     addTitle: "স্কুল বা কলেজ যোগ করো",
     question: "তোমার স্কুল বা কলেজের নাম কী?",
     placeholder: "যেমন: রূপনগর হাই স্কুল",
