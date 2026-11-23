@@ -13,7 +13,9 @@ import { bn } from "~/lib/bangla-digits";
 import { getWriter, requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
+  canEditStory,
   canReadStory,
+  deleteStory,
   formatStoryDate,
   getStoryById,
   hasReported,
@@ -52,6 +54,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
   const form = await request.formData();
+  if (form.get("intent") === "delete") {
+    if (!canEditStory(found, user)) {
+      throw new Response("Forbidden", { status: 403 });
+    }
+    await deleteStory(env, found);
+    return redirect("/feed", 303);
+  }
   if (form.get("intent") !== "report") {
     throw new Response("Bad Request", { status: 400 });
   }
@@ -104,6 +113,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     writer: found.writer,
     school: found.school,
     canReport: found.writer.id !== user.id,
+    canEdit: canEditStory(found, user),
     reported: await hasReported(env, found.id, user.id),
   };
 }
@@ -230,6 +240,53 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
             <span>{bn(s.loveTotal)}</span> {t.loveCount} · {strings.love.hint}
           </p>
         </section>
+
+        {s.canEdit ? (
+          <div
+            style={{
+              marginTop: 20,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <a className="tb-link" href={`${path}/edit`}>
+              {strings.manage.edit}
+            </a>
+            <details>
+              <summary
+                className="tb-link"
+                style={{ cursor: "pointer", listStyle: "none" }}
+              >
+                {strings.manage.delete}
+              </summary>
+              <Form
+                method="post"
+                className="tb-card"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  padding: 16,
+                  marginTop: 8,
+                  textAlign: "left",
+                }}
+              >
+                <input type="hidden" name="intent" value="delete" />
+                <p style={{ fontWeight: 600 }}>
+                  {strings.manage.deleteConfirmTitle}
+                </p>
+                <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>
+                  {strings.manage.deleteConfirmHint}
+                </p>
+                <button type="submit" className="tb-btn tb-btn--dark">
+                  {strings.manage.deleteSubmit}
+                </button>
+              </Form>
+            </details>
+          </div>
+        ) : null}
 
         {s.canReport ? (
           <div style={{ marginTop: 20, textAlign: "center" }}>

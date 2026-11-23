@@ -228,6 +228,18 @@ export const strings = {
     saveFailed: "সেভ করা যায়নি। একটু পরে আবার চেষ্টা করো।",
   },
 
+  manage: {
+    editTitle: "গল্প সম্পাদনা",
+    edit: "গল্পটা এডিট করো",
+    save: "সেভ করো",
+    saving: "সেভ হচ্ছে…",
+    delete: "গল্পটা মুছে ফেলো",
+    deleteConfirmTitle: "গল্পটা মুছে ফেলবে?",
+    deleteConfirmHint:
+      "মুছে ফেললে গল্প আর ছবি দুটোই চিরতরে চলে যাবে, ফিরিয়ে আনা যাবে না।",
+    deleteSubmit: "হ্যাঁ, মুছে ফেলো",
+  },
+
   report: {
     action: "রিপোর্ট করো",
     confirmTitle: "গল্পটা রিপোর্ট করবে?",

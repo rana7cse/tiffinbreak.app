@@ -1,27 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { data, Form, redirect, useNavigation } from "react-router";
-import { CloseIcon, ImageIcon, SchoolIcon } from "~/components/icons";
+import { data, redirect, useNavigation } from "react-router";
+import { CloseIcon } from "~/components/icons";
 import { SchoolSheet } from "~/components/school-sheet";
+import { StoryForm } from "~/components/story-form";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
-import {
-  COVER_MAX_BYTES,
-  type CoverError,
-  storeCover,
-  validateCover,
-} from "~/lib/cover";
-import { resizeCover } from "~/lib/cover-resize";
+import { storeCover } from "~/lib/cover";
 import { requireWriter } from "~/lib/require-writer";
-import { findOrCreateSchool, findSchoolById } from "~/lib/schools";
 import type { ShellHandle } from "~/lib/shell";
 import { publishStory } from "~/lib/stories";
 import { clearDraft, loadDraft, saveDraft, wordCount } from "~/lib/story-draft";
-import {
-  BODY_MAX,
-  cleanStoryInput,
-  TITLE_MAX,
-  validateStoryInput,
-} from "~/lib/story-input";
+import { parseStoryForm } from "~/lib/story-form";
 import { strings } from "~/strings";
 import type { Route } from "./+types/write";
 
@@ -44,63 +33,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
-  const form = await request.formData();
-  const field = (name: string) => {
-    const v = form.get(name);
-    return typeof v === "string" ? v : "";
-  };
-
-  const rawTitle = field("title");
-  const rawBody = field("body");
-  const input = cleanStoryInput(rawTitle, rawBody);
-  const errors: Record<string, string> = {};
-  for (const [name, code] of Object.entries(validateStoryInput(input))) {
-    errors[name] =
-      code === "titleTooLong"
-        ? t.errors.titleTooLong(bn(TITLE_MAX))
-        : code === "bodyTooLong"
-          ? t.errors.bodyTooLong(bn(BODY_MAX))
-          : t.errors[code];
-  }
-
-  // A School chosen in the sheet arrives by id; a bare name is found or
-  // created here, so the form also works without JavaScript.
-  const schoolId = field("schoolId");
-  const school = schoolId
-    ? await findSchoolById(env, schoolId)
-    : await findOrCreateSchool(env, field("schoolName"));
-  if (!school) errors.school = t.errors.schoolRequired;
-
-  const upload = form.get("cover");
-  const cover = upload instanceof File && upload.size > 0 ? upload : null;
-  const coverError: CoverError | null = cover ? validateCover(cover) : null;
-  if (coverError) {
-    errors.cover =
-      coverError === "coverTooBig"
-        ? t.errors.coverTooBig(bn(COVER_MAX_BYTES / (1024 * 1024)))
-        : t.errors[coverError];
-  }
-
-  if (Object.keys(errors).length > 0 || !school) {
+  const parsed = await parseStoryForm(env, await request.formData());
+  if (!parsed.ok) {
     return data(
-      {
-        errors,
-        values: {
-          title: rawTitle,
-          body: rawBody,
-          school: school ?? null,
-        },
-      },
+      { errors: parsed.errors, values: parsed.values },
       { status: 400 },
     );
   }
 
-  const coverKey = cover ? await storeCover(env, cover) : null;
+  const coverKey = parsed.cover ? await storeCover(env, parsed.cover) : null;
   const id = await publishStory(env, {
     writerId: user.id,
-    schoolId: school.id,
+    schoolId: parsed.school.id,
     coverKey,
-    ...input,
+    ...parsed.input,
   });
   return redirect(`/stories/${id}`);
 }
@@ -126,8 +72,6 @@ export default function Write({
   const [sheetOpen, setSheetOpen] = useState(!returned?.school);
   const [promptIndex, setPromptIndex] = useState(0);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const coverInput = useRef<HTMLInputElement>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const restored = useRef(false);
   const navigation = useNavigation();
 
@@ -168,29 +112,6 @@ export default function Write({
   useEffect(() => {
     if (redirectingToStory) clearDraft(localStorage, writerId);
   }, [redirectingToStory, writerId]);
-
-  // Shrink the picked photo in the browser; the resized File replaces the
-  // original in the input, so the normal form submit uploads it.
-  async function pickCover(file: File | undefined) {
-    const input = coverInput.current;
-    if (!input || !file) return;
-    const resized = await resizeCover(file);
-    const files = new DataTransfer();
-    files.items.add(resized);
-    input.files = files.files;
-    setCoverPreview((old) => {
-      if (old) URL.revokeObjectURL(old);
-      return URL.createObjectURL(resized);
-    });
-  }
-
-  function removeCover() {
-    if (coverInput.current) coverInput.current.value = "";
-    setCoverPreview((old) => {
-      if (old) URL.revokeObjectURL(old);
-      return null;
-    });
-  }
 
   const words = wordCount(body);
   const prompt = prompts[promptIndex % prompts.length];
@@ -240,148 +161,17 @@ export default function Write({
         </button>
       </header>
 
-      <Form
+      <StoryForm
         id="tb-write-form"
-        method="post"
-        encType="multipart/form-data"
-        style={{
-          flex: 1,
-          padding: "18px 20px 0",
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-          minHeight: 0,
-        }}
+        title={title}
+        onTitleChange={setTitle}
+        body={body}
+        onBodyChange={setBody}
+        bodyRef={bodyRef}
+        school={school}
+        onOpenSheet={() => setSheetOpen(true)}
+        errors={errors}
       >
-        <input type="hidden" name="schoolId" value={school?.id ?? ""} />
-
-        <input
-          ref={coverInput}
-          id="tb-cover"
-          name="cover"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          hidden
-          onChange={(e) => pickCover(e.target.files?.[0])}
-        />
-        {coverPreview ? (
-          <div>
-            <img
-              src={coverPreview}
-              alt={t.coverAlt}
-              style={{
-                display: "block",
-                width: "100%",
-                height: 180,
-                objectFit: "cover",
-                borderRadius: 18,
-                border: "var(--tb-border)",
-              }}
-            />
-            <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-              <button
-                type="button"
-                className="tb-link"
-                onClick={() => coverInput.current?.click()}
-              >
-                {t.coverChange}
-              </button>
-              <button type="button" className="tb-link" onClick={removeCover}>
-                {t.coverRemove}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="tb-dropzone"
-            onClick={() => coverInput.current?.click()}
-          >
-            <ImageIcon size={24} color="#4F5A54" />
-            {t.coverPick}
-          </button>
-        )}
-        {errors.cover ? (
-          <p className="tb-meta" role="alert">
-            {errors.cover}
-          </p>
-        ) : null}
-
-        <label className="tb-sr-only" htmlFor="tb-title">
-          {t.storyTitle}
-        </label>
-        <input
-          id="tb-title"
-          name="title"
-          className="tb-field tb-field--title"
-          type="text"
-          placeholder={strings.story.titlePlaceholder}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          aria-invalid={errors.title ? true : undefined}
-        />
-        {errors.title ? (
-          <p className="tb-meta" role="alert">
-            {errors.title}
-          </p>
-        ) : null}
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 14,
-            color: "var(--tb-muted)",
-          }}
-        >
-          <SchoolIcon size={16} color="#4F5A54" />
-          {school ? (
-            <>
-              {school.name} ·{" "}
-              <button
-                type="button"
-                className="tb-link"
-                onClick={() => setSheetOpen(true)}
-              >
-                {t.changeSchool}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="tb-link"
-              onClick={() => setSheetOpen(true)}
-            >
-              {t.chooseSchool}
-            </button>
-          )}
-        </div>
-        {errors.school ? (
-          <p className="tb-meta" role="alert">
-            {errors.school}
-          </p>
-        ) : null}
-
-        <label className="tb-sr-only" htmlFor="tb-body">
-          {t.storyBody}
-        </label>
-        <textarea
-          id="tb-body"
-          name="body"
-          ref={bodyRef}
-          className="tb-field tb-field--body"
-          placeholder={strings.story.bodyPlaceholder}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          aria-invalid={errors.body ? true : undefined}
-        />
-        {errors.body ? (
-          <p className="tb-meta" role="alert">
-            {errors.body}
-          </p>
-        ) : null}
-
         {words < 8 ? (
           <section className="tb-prompt" id="tb-prompt">
             <span className="tb-tape" aria-hidden="true" />
@@ -432,7 +222,7 @@ export default function Write({
             </div>
           </section>
         ) : null}
-      </Form>
+      </StoryForm>
 
       <footer
         style={{
