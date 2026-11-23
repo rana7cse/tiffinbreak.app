@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { data, redirect, useNavigation } from "react-router";
-import { CloseIcon } from "~/components/icons";
+import { CloseIcon, ImageIcon } from "~/components/icons";
 import { SchoolSheet } from "~/components/school-sheet";
 import { StoryForm } from "~/components/story-form";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
-import { storeCover } from "~/lib/cover";
 import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
@@ -20,6 +19,8 @@ const t = strings.write;
 /** The writing page has its own header instead of the bottom nav. */
 export const handle = {
   shellClass: ["tb-app--reading"],
+  // theme/write.html: the page fills the screen, so the footer sits at its foot.
+  shellStyle: { height: "100vh", minHeight: 640 },
 } as const satisfies ShellHandle;
 
 export function meta(_: Route.MetaArgs) {
@@ -49,11 +50,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     return storyFormRateLimited(form, "cover");
   }
 
-  const coverKey = parsed.cover ? await storeCover(env, parsed.cover) : null;
   const id = await publishStory(env, {
     writerId: user.id,
     schoolId: parsed.school.id,
-    coverKey,
+    cover: parsed.cover,
     ...parsed.input,
   });
   return redirect(`/stories/${id}`);
@@ -136,7 +136,7 @@ export default function Write({
           href="/feed"
           aria-label={strings.common.close}
         >
-          <CloseIcon size={22} color="#1E2A25" />
+          <CloseIcon size={22} color="var(--tb-ink)" />
         </a>
         <span
           style={{
@@ -236,13 +236,22 @@ export default function Write({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           marginTop: 14,
-          padding: "8px 20px 22px",
+          padding: "8px 12px 22px",
           borderTop: "var(--tb-border)",
           background: "var(--tb-paper-2)",
         }}
       >
+        <button
+          type="button"
+          className="tb-ghost-btn"
+          aria-label={strings.story.addImage}
+          onClick={() => document.getElementById("tb-cover")?.click()}
+        >
+          <ImageIcon size={22} color="var(--tb-muted)" />
+          {t.photo}
+        </button>
         <span className="tb-meta">
           <span id="tb-words">{bn(words)}</span> {t.wordsWritten}
         </span>

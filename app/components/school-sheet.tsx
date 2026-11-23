@@ -174,7 +174,7 @@ export function SchoolSheet({
                 aria-selected={s.name === q}
                 onClick={() => setQuery(s.name)}
               >
-                <SchoolIcon size={18} color="#5B6660" />
+                <SchoolIcon size={18} color="var(--tb-subtle)" />
                 {s.name}
               </button>
             ))}
@@ -186,7 +186,7 @@ export function SchoolSheet({
                 aria-selected={false}
                 onClick={save}
               >
-                <SchoolIcon size={18} color="#5B6660" />
+                <SchoolIcon size={18} color="var(--tb-subtle)" />
                 {t.addNew(q)}
               </button>
             ) : null}

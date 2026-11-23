@@ -4,7 +4,7 @@ import { AppHeader, BottomNav, withNavShell } from "~/components/app-shell";
 import { DiaryEmptyState } from "~/components/diary-empty-state";
 import { StoryCard } from "~/components/story-card";
 import { cloudflareContext } from "~/context";
-import { type FeedStory, listFeed } from "~/lib/feed";
+import { countWriterStories, type FeedStory, listFeed } from "~/lib/feed";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import { strings } from "~/strings";
@@ -23,7 +23,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const cursor = new URL(request.url).searchParams.get("cursor");
   const page = await listFeed(env, cursor);
+  const ownStories = await countWriterStories(env, user.id);
   return {
+    hasOwnStories: ownStories > 0,
     writer: { name: user.name, image: user.image },
     stories: page.stories,
     nextCursor: page.nextCursor,
@@ -35,7 +37,8 @@ const olderHref = (cursor: string) =>
   `/feed?cursor=${encodeURIComponent(cursor)}`;
 
 export default function Feed({ loaderData }: Route.ComponentProps) {
-  const { writer, stories, nextCursor, isFirstPage } = loaderData;
+  const { writer, stories, nextCursor, isFirstPage, hasOwnStories } =
+    loaderData;
   const fetcher = useFetcher<typeof loader>();
 
   // Older pages loaded on scroll, appended below the server-rendered page.
@@ -80,7 +83,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
     <>
       <AppHeader writer={writer} />
       <main className="tb-main">
-        {all.length === 0 && isFirstPage ? <DiaryEmptyState /> : null}
+        {!hasOwnStories && isFirstPage ? <DiaryEmptyState /> : null}
         {all.length > 0 ? (
           <>
             <h2 className="tb-h2 tb-h2--sm" style={{ margin: "6px 4px -4px" }}>

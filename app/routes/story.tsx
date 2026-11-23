@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Form, redirect } from "react-router";
 import { Avatar } from "~/components/avatar";
 import { BackIcon, ChevronRightIcon, ShareIcon } from "~/components/icons";
@@ -6,6 +7,7 @@ import { LoveActionButton, LoveBox, useLove } from "~/components/love-box";
 import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
+import { formatStoryDate } from "~/lib/dhaka-date";
 import { getMyLove } from "~/lib/love";
 import { overLimit, tooManyRequestsText } from "~/lib/rate-limit";
 import { getWriter, requireWriter } from "~/lib/require-writer";
@@ -14,7 +16,6 @@ import {
   canEditStory,
   canReadStory,
   deleteStory,
-  formatStoryDate,
   getStoryById,
   hasReported,
   paragraphs,
@@ -48,7 +49,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
   const found = await getStoryById(env, params.id);
-  if (!found || !canReadStory(found, user as { id: string; role?: string })) {
+  if (!found || !canReadStory(found, user)) {
     throw new Response("Not Found", { status: 404 });
   }
   const form = await request.formData();
@@ -99,7 +100,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
 
   const { user } = session;
-  if (!found || !canReadStory(found, user as { id: string; role?: string })) {
+  if (!found || !canReadStory(found, user)) {
     throw new Response("Not Found", { status: 404 });
   }
   return {
@@ -128,6 +129,37 @@ export default function StoryPage({ loaderData }: Route.ComponentProps) {
   return <ReadStory s={loaderData} />;
 }
 
+/** The delete and report confirmation, shown inside a `<details>`. */
+function ConfirmCard({
+  intent,
+  title,
+  hint,
+  submit,
+  children,
+}: {
+  intent: "delete" | "report";
+  title: string;
+  hint: string;
+  submit: string;
+  children?: ReactNode;
+}) {
+  return (
+    <Form
+      method="post"
+      className="tb-card tb-card--pad tb-stack"
+      style={{ marginTop: 8, textAlign: "left" }}
+    >
+      <input type="hidden" name="intent" value={intent} />
+      <p style={{ fontWeight: 600 }}>{title}</p>
+      <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>{hint}</p>
+      {children}
+      <button type="submit" className="tb-btn tb-btn--dark">
+        {submit}
+      </button>
+    </Form>
+  );
+}
+
 type ReadData = Exclude<
   Route.ComponentProps["loaderData"],
   { preview: object }
@@ -148,7 +180,7 @@ function ReadStory({ s }: { s: ReadData }) {
           href="/feed"
           aria-label={strings.nav.backToFeed}
         >
-          <BackIcon size={22} color="#1E2A25" />
+          <BackIcon size={22} color="var(--tb-ink)" />
         </a>
         <span className="tb-header__title">{strings.brand.name}</span>
         <ShareButton
@@ -157,48 +189,58 @@ function ReadStory({ s }: { s: ReadData }) {
           className="tb-icon-btn"
           label={t.share}
         >
-          <ShareIcon size={21} color="#1E2A25" />
+          <ShareIcon size={21} color="var(--tb-ink)" />
         </ShareButton>
       </header>
 
       {s.coverKey ? (
-        <img
-          src={coverUrl("", s.coverKey) ?? undefined}
-          alt=""
-          style={{
-            display: "block",
-            width: "100%",
-            height: 210,
-            objectFit: "cover",
-            borderBottom: "var(--tb-border)",
-          }}
-        />
+        <div
+          className="tb-photo"
+          style={{ height: 210, borderBottom: "var(--tb-border)" }}
+        >
+          <img
+            src={coverUrl("", s.coverKey) ?? undefined}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
       ) : null}
 
       <article style={{ padding: "22px 22px 24px" }}>
         <h1 className="tb-h1">{s.title}</h1>
 
-        <a
-          href={writerHref}
+        <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 12,
             margin: "16px 0 24px",
-            textDecoration: "none",
-            color: "var(--tb-ink)",
           }}
         >
-          <Avatar name={s.writer.name} image={s.writer.image} />
+          <Avatar
+            name={s.writer.name}
+            image={s.writer.image}
+            size="md"
+            href={writerHref}
+            label={strings.writer.profileOf(s.writer.name)}
+          />
           <span style={{ fontSize: 15, lineHeight: 1.4 }}>
-            <span style={{ display: "block", fontWeight: 600 }}>
+            <a
+              href={writerHref}
+              style={{
+                display: "block",
+                fontWeight: 600,
+                color: "var(--tb-ink)",
+                textDecoration: "none",
+              }}
+            >
               {s.writer.name}{" "}
               {s.writer.handle ? (
                 <span style={{ fontWeight: 400, color: "var(--tb-subtle)" }}>
                   @{s.writer.handle}
                 </span>
               ) : null}
-            </span>
+            </a>
             <span style={{ display: "block", color: "var(--tb-subtle)" }}>
               <a
                 href={`/schools/${s.school.id}`}
@@ -209,7 +251,7 @@ function ReadStory({ s }: { s: ReadData }) {
               · {s.date} · {t.readingTime(bn(s.minutes))}
             </span>
           </span>
-        </a>
+        </div>
 
         <div className="tb-prose">
           {s.paragraphs.map((p) => (
@@ -252,29 +294,12 @@ function ReadStory({ s }: { s: ReadData }) {
               >
                 {strings.manage.delete}
               </summary>
-              <Form
-                method="post"
-                className="tb-card"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                  padding: 16,
-                  marginTop: 8,
-                  textAlign: "left",
-                }}
-              >
-                <input type="hidden" name="intent" value="delete" />
-                <p style={{ fontWeight: 600 }}>
-                  {strings.manage.deleteConfirmTitle}
-                </p>
-                <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>
-                  {strings.manage.deleteConfirmHint}
-                </p>
-                <button type="submit" className="tb-btn tb-btn--dark">
-                  {strings.manage.deleteSubmit}
-                </button>
-              </Form>
+              <ConfirmCard
+                intent="delete"
+                title={strings.manage.deleteConfirmTitle}
+                hint={strings.manage.deleteConfirmHint}
+                submit={strings.manage.deleteSubmit}
+              />
             </details>
           </div>
         ) : null}
@@ -293,25 +318,12 @@ function ReadStory({ s }: { s: ReadData }) {
                 >
                   {strings.report.action}
                 </summary>
-                <Form
-                  method="post"
-                  className="tb-card"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                    padding: 16,
-                    marginTop: 8,
-                    textAlign: "left",
-                  }}
+                <ConfirmCard
+                  intent="report"
+                  title={strings.report.confirmTitle}
+                  hint={strings.report.confirmHint}
+                  submit={strings.report.submit}
                 >
-                  <input type="hidden" name="intent" value="report" />
-                  <p style={{ fontWeight: 600 }}>
-                    {strings.report.confirmTitle}
-                  </p>
-                  <p style={{ fontSize: 15, color: "var(--tb-muted)" }}>
-                    {strings.report.confirmHint}
-                  </p>
                   <label className="tb-label" htmlFor="report-reason">
                     {strings.report.reasonLabel}
                   </label>
@@ -321,10 +333,7 @@ function ReadStory({ s }: { s: ReadData }) {
                     className="tb-input"
                     maxLength={500}
                   />
-                  <button type="submit" className="tb-btn tb-btn--dark">
-                    {strings.report.submit}
-                  </button>
-                </Form>
+                </ConfirmCard>
               </details>
             )}
           </div>
@@ -335,7 +344,7 @@ function ReadStory({ s }: { s: ReadData }) {
           href={writerHref}
           style={{ marginTop: 24, padding: 16, boxShadow: "var(--tb-shadow)" }}
         >
-          <Avatar name={s.writer.name} image={s.writer.image} />
+          <Avatar name={s.writer.name} image={s.writer.image} size="md" />
           <span style={{ flex: 1, fontSize: 15, lineHeight: 1.45 }}>
             <span style={{ display: "block", fontWeight: 600 }}>
               {t.moreFrom(firstName)}
@@ -344,7 +353,7 @@ function ReadStory({ s }: { s: ReadData }) {
               {s.school.name}
             </span>
           </span>
-          <ChevronRightIcon size={20} color="#1E2A25" />
+          <ChevronRightIcon size={20} color="var(--tb-ink)" />
         </a>
       </article>
 

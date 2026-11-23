@@ -115,7 +115,7 @@ export function LoveBox({
             background: mine ? "var(--tb-accent-soft)" : undefined,
           }}
         >
-          <HeartIcon size={36} color="#C0501D" filled={mine > 0} />
+          <HeartIcon size={36} color="var(--tb-accent)" filled={mine > 0} />
         </button>
         <span
           hidden={!mine}
@@ -160,7 +160,7 @@ export function LoveActionButton({
       onClick={love.tap}
       style={{ fontSize: 16, color: "var(--tb-accent)" }}
     >
-      <HeartIcon size={22} color="#C0501D" filled={love.mine > 0} />
+      <HeartIcon size={22} color="var(--tb-accent)" filled={love.mine > 0} />
       <span>{bn(love.total)}</span>
     </button>
   );

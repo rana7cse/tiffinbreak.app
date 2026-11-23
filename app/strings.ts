@@ -145,6 +145,7 @@ export const strings = {
     usePrompt: "এটা নিয়েই লিখি",
     nextPrompt: "আরেকটা প্রশ্ন",
     wordsWritten: "শব্দ লেখা হয়েছে",
+    photo: "ছবি",
     publishing: "পোস্ট হচ্ছে…",
     coverPick: "পুরোনো একটা ছবি দাও (না দিলেও চলবে)",
     coverChange: "ছবি বদলাও",

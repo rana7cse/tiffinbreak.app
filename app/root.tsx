@@ -10,7 +10,7 @@ import {
 
 import type { Route } from "./+types/root";
 import { THEME_COLOR } from "./lib/pwa";
-import { useShellClassName } from "./lib/shell";
+import { useShell } from "./lib/shell";
 import themeHref from "./styles/theme.css?url";
 
 export const links: Route.LinksFunction = () => [
@@ -33,7 +33,7 @@ export const links: Route.LinksFunction = () => [
 // Every page (including error pages) renders inside the .tb-app mobile
 // column; theme.css caps it at --tb-max and centres it on wider screens.
 export function Layout({ children }: { children: React.ReactNode }) {
-  const shellClassName = useShellClassName();
+  const shell = useShell();
   return (
     <html lang="bn">
       <head>
@@ -44,7 +44,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <div className={shellClassName}>{children}</div>
+        <div className={shell.className} style={shell.style}>
+          {children}
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>

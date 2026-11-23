@@ -1,26 +1,19 @@
+import { Avatar } from "~/components/avatar";
 import { HeartIcon, ShareIcon } from "~/components/icons";
+import { ShareButton } from "~/components/share-button";
 import { bn } from "~/lib/bangla-digits";
-import { type FeedStory, relativeTime } from "~/lib/feed";
+import { relativeTime } from "~/lib/dhaka-date";
+import type { FeedStory } from "~/lib/feed";
 import { coverUrl } from "~/lib/story-share";
 import { strings } from "~/strings";
 
-const AVATAR_VARIANTS = [
-  "",
-  " tb-avatar--yellow",
-  " tb-avatar--sky",
-  " tb-avatar--pink",
-];
+const AVATAR_VARIANTS = [undefined, "yellow", "sky", "pink"] as const;
 
 /** A stable colour per Writer, since the theme varies the avatar background. */
-function avatarVariant(writerId: string): string {
+function avatarVariant(writerId: string) {
   let h = 0;
   for (const c of writerId) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return AVATAR_VARIANTS[h % AVATAR_VARIANTS.length] as string;
-}
-
-function initialOf(name: string) {
-  const [first] = new Intl.Segmenter().segment(name.trim());
-  return first?.segment ?? "";
+  return AVATAR_VARIANTS[h % AVATAR_VARIANTS.length];
 }
 
 /**
@@ -32,18 +25,14 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
   const writerHref = s.writer.handle ? `/writers/${s.writer.handle}` : null;
   const profileLabel = strings.writer.profileOf(s.writer.name);
 
-  const avatarClass = `tb-avatar${avatarVariant(s.writer.id)}`;
-  const avatarContent = s.writer.image ? (
-    <img
-      src={s.writer.image}
-      alt=""
-      referrerPolicy="no-referrer"
-      width={38}
-      height={38}
-      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+  const avatar = (
+    <Avatar
+      name={s.writer.name}
+      image={s.writer.image}
+      variant={avatarVariant(s.writer.id)}
+      href={writerHref ?? undefined}
+      label={writerHref ? profileLabel : undefined}
     />
-  ) : (
-    initialOf(s.writer.name)
   );
 
   return (
@@ -60,17 +49,7 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
       ) : null}
       <div className="tb-story-card__body">
         <div className="tb-author">
-          {writerHref ? (
-            <a
-              className={avatarClass}
-              href={writerHref}
-              aria-label={profileLabel}
-            >
-              {avatarContent}
-            </a>
-          ) : (
-            <span className={avatarClass}>{avatarContent}</span>
-          )}
+          {avatar}
           <div className="tb-author__text">
             {writerHref ? (
               <a className="tb-author__name" href={writerHref}>
@@ -106,14 +85,15 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
             <HeartIcon />
             <span className="tb-love__count">{bn(s.loveTotal)}</span>
           </a>
-          <button
-            type="button"
+          <ShareButton
+            path={storyHref}
+            title={s.title}
             className="tb-ghost-btn"
-            aria-label={strings.story.share}
+            label={strings.story.share}
           >
-            <ShareIcon size={20} color="#4F5A54" />
+            <ShareIcon size={20} color="var(--tb-muted)" />
             {strings.feed.share}
-          </button>
+          </ShareButton>
         </div>
       </div>
     </article>

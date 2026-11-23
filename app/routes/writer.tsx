@@ -1,11 +1,17 @@
 import { BottomNav, withNavShell } from "~/components/app-shell";
 import { Avatar } from "~/components/avatar";
-import { BackIcon, SchoolIcon, ShareIcon } from "~/components/icons";
+import {
+  BackIcon,
+  SchoolIcon,
+  ShareIcon,
+  StoryTileIcon,
+} from "~/components/icons";
+import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
 import { bn } from "~/lib/bangla-digits";
+import { formatStoryDate } from "~/lib/dhaka-date";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { formatStoryDate } from "~/lib/stories";
 import { coverUrl } from "~/lib/story-share";
 import { getWriterProfile } from "~/lib/writers";
 import { strings } from "~/strings";
@@ -22,11 +28,7 @@ export function meta(_: Route.MetaArgs) {
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
-  const profile = await getWriterProfile(
-    env,
-    params.handle,
-    user as { id: string; role?: string },
-  );
+  const profile = await getWriterProfile(env, params.handle, user);
   if (!profile) throw new Response("Not Found", { status: 404 });
   return {
     own: profile.id === user.id,
@@ -46,26 +48,41 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   };
 }
 
-// theme/profile.html `<StoryRow />`; swap for the Feed's card when it lands.
+/** The coloured tile (with an icon) a Story row shows when it has no cover. */
+const TILES = [
+  { background: "var(--tb-yellow-soft)", icon: "ball" },
+  { background: "var(--tb-sky)", icon: "lamp" },
+] as const;
+
+function tileFor(id: string) {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return TILES[h % TILES.length] as (typeof TILES)[number];
+}
+
+// theme/profile.html `<StoryRow />`: the profile lists rows, not Feed cards.
 function StoryRow({
   s,
 }: {
   s: Route.ComponentProps["loaderData"]["stories"][number];
 }) {
+  const tile = tileFor(s.id);
   return (
     <a className="tb-row tb-row--top" href={`/stories/${s.id}`}>
-      <div
-        className="tb-row__thumb tb-photo"
-        style={
-          s.coverKey
-            ? {
-                backgroundImage: `url(${coverUrl("", s.coverKey)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : { backgroundSize: "auto" }
-        }
-      />
+      {s.coverKey ? (
+        <div
+          className="tb-row__thumb tb-photo"
+          style={{
+            backgroundImage: `url(${coverUrl("", s.coverKey)})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+      ) : (
+        <div className="tb-row__thumb" style={{ background: tile.background }}>
+          <StoryTileIcon variant={tile.icon} color="var(--tb-ink)" />
+        </div>
+      )}
       <div style={{ minWidth: 0 }}>
         <h3 className="tb-row__title">{s.title}</h3>
         <p className="tb-meta" style={{ marginTop: 6 }}>
@@ -86,22 +103,23 @@ export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
           href="/feed"
           aria-label={strings.nav.backToFeed}
         >
-          <BackIcon size={22} color="#1E2A25" />
+          <BackIcon size={22} color="var(--tb-ink)" />
         </a>
         <span className="tb-header__title">{strings.brand.name}</span>
-        <button
-          type="button"
+        <ShareButton
+          path={`/writers/${p.handle}`}
+          title={p.name}
           className="tb-icon-btn"
-          aria-label={t.shareProfile}
+          label={t.shareProfile}
         >
-          <ShareIcon size={21} color="#1E2A25" />
-        </button>
+          <ShareIcon size={21} color="var(--tb-ink)" />
+        </ShareButton>
       </header>
 
       <div style={{ padding: "24px 20px 24px" }}>
         {/* ProfileHeader */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Avatar name={p.name} image={p.image} large />
+          <Avatar name={p.name} image={p.image} size="lg" />
           <div style={{ minWidth: 0 }}>
             <h1
               className="tb-display"
@@ -122,7 +140,7 @@ export default function WriterProfile({ loaderData: p }: Route.ComponentProps) {
                   fontSize: 15,
                 }}
               >
-                <SchoolIcon size={17} color="#1E2A25" />
+                <SchoolIcon size={17} color="var(--tb-ink)" />
                 {p.schools.join("، ")}
               </p>
             ) : null}
