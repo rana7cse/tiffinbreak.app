@@ -2,8 +2,13 @@ import { redirect } from "react-router";
 import { LoginScreen } from "~/components/login-screen";
 import { getWriter } from "~/lib/require-writer";
 import { sanitizeReturnTo } from "~/lib/return-to";
+import type { ShellHandle } from "~/lib/shell";
 import { strings } from "~/strings";
 import type { Route } from "./+types/login";
+
+export const handle = {
+  shellClass: ["tb-app--ruled", "tb-anim"],
+} satisfies ShellHandle;
 
 export function meta(_: Route.MetaArgs) {
   return [{ title: strings.meta.pageTitle(strings.login.title) }];

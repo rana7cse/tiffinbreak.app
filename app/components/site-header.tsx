@@ -7,10 +7,16 @@ type SiteHeaderProps = {
   writer: { name: string; image?: string | null } | null;
   /** Where the brand links to: "/" signed out, "/feed" signed in. */
   brandHref: string;
+  /** Hide the login pill when signed out (e.g. on the login page itself). */
+  showLogin?: boolean;
 };
 
 /** The header shared by the landing page and the Feed. */
-export function SiteHeader({ writer, brandHref }: SiteHeaderProps) {
+export function SiteHeader({
+  writer,
+  brandHref,
+  showLogin = true,
+}: SiteHeaderProps) {
   return (
     <header className="tb-header">
       <a className="tb-brand" href={brandHref}>
@@ -32,11 +38,11 @@ export function SiteHeader({ writer, brandHref }: SiteHeaderProps) {
             variant="pink"
           />
         </div>
-      ) : (
+      ) : showLogin ? (
         <a className="tb-btn tb-btn--pill" href="/login">
           {strings.nav.login}
         </a>
-      )}
+      ) : null}
     </header>
   );
 }

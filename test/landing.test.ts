@@ -30,7 +30,7 @@ describe("landing page", () => {
   });
 
   it("leaves the shell plain on pages without a variant", async () => {
-    const { html } = await getHtml("/login");
+    const { html } = await getHtml("/privacy");
 
     expect(html).toContain('<div class="tb-app">');
   });
