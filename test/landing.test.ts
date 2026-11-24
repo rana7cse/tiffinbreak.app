@@ -114,6 +114,16 @@ describe("landing page when signed in", () => {
     expect(html).not.toMatch(/<a [^>]*href="\/login"/);
   });
 
+  it("links to the Writer's Feed and own stories under the write CTA", async () => {
+    const html = await getAs({ name: "Rafi Ahmed" });
+    const links = html.match(
+      /<nav class="tb-board__links"[\s\S]*?<\/nav>/,
+    )?.[0];
+
+    expect(links).toMatch(/<a href="\/feed">আমার ফিড<\/a>/);
+    expect(links).toMatch(/<a href="\/profile">আমার গল্পগুলো<\/a>/);
+  });
+
   it("replaces the login buttons with a write CTA to /write", async () => {
     const html = await getAs({ name: "Rafi Ahmed" });
     const top = html.slice(0, html.indexOf('id="how"'));

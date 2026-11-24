@@ -144,6 +144,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <PenIcon size={20} color="#FFFFFF" />
               {t.startWriting}
             </a>
+          ) : null}
+          {writer ? (
+            <nav className="tb-board__links" aria-label={strings.nav.label}>
+              <a href="/feed">{t.myFeed}</a>
+              <a href="/profile">{t.myStories}</a>
+            </nav>
           ) : (
             <>
               <form

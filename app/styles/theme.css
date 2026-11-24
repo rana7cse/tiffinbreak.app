@@ -201,6 +201,12 @@ img, svg { display: block; }
   font-family: var(--tb-font-display); font-weight: 700; font-size: 36px; line-height: 1.3; color: #fff;
 }
 .tb-board__text { margin-top: 16px; font-size: 17px; line-height: 1.7; color: var(--tb-chalk-2); }
+.tb-board__links { display: flex; justify-content: center; gap: 28px; margin-top: 4px; }
+.tb-board__links a {
+  color: var(--tb-chalk); font-size: 16px; font-weight: 600; text-decoration: none;
+  padding: 6px 2px; border-bottom: 2px dashed rgba(243, 241, 231, 0.5);
+}
+.tb-board__links a:hover, .tb-board__links a:focus-visible { color: var(--tb-yellow); border-bottom-color: var(--tb-yellow); }
 .tb-board__chip {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 14px 6px 8px; border-radius: var(--tb-pill);
