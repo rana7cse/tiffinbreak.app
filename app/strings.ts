@@ -144,6 +144,7 @@ export const strings = {
     promptTitle: "কোথা থেকে শুরু করবে বুঝছো না?",
     usePrompt: "এটা নিয়েই লিখি",
     nextPrompt: "আরেকটা প্রশ্ন",
+    closePrompt: "প্রশ্নটা বন্ধ করো",
     wordsWritten: "শব্দ লেখা হয়েছে",
     photo: "ছবি",
     publishing: "পোস্ট হচ্ছে…",

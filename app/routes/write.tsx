@@ -83,6 +83,7 @@ export default function Write({
     !(returned ? returned.school : lastSchool),
   );
   const [promptIndex, setPromptIndex] = useState(0);
+  const [promptClosed, setPromptClosed] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const restored = useRef(false);
   const navigation = useNavigation();
@@ -184,10 +185,25 @@ export default function Write({
         onOpenSheet={() => setSheetOpen(true)}
         errors={errors}
       >
-        {words < 8 ? (
+        {words < 8 && !promptClosed ? (
           <section className="tb-prompt" id="tb-prompt">
             <span className="tb-tape" aria-hidden="true" />
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#6B4E08" }}>
+            <button
+              type="button"
+              className="tb-prompt__close"
+              aria-label={t.closePrompt}
+              onClick={() => setPromptClosed(true)}
+            >
+              <CloseIcon size={18} color="#6B4E08" />
+            </button>
+            <p
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#6B4E08",
+                paddingRight: 28,
+              }}
+            >
               {t.promptTitle}
             </p>
             <p

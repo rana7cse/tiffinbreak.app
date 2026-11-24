@@ -349,6 +349,12 @@ img, svg { display: block; }
   border: 1.5px solid var(--tb-ink); background: var(--tb-yellow-soft);
   box-shadow: var(--tb-shadow-sm); transform: rotate(-0.8deg);
 }
+.tb-prompt__close {
+  position: absolute; top: 6px; right: 6px; width: 36px; height: 36px;
+  display: grid; place-items: center; border: 0; border-radius: 50%;
+  background: transparent; cursor: pointer;
+}
+.tb-prompt__close:hover { background: rgba(107, 78, 8, 0.1); }
 .tb-tape {
   position: absolute; top: -9px; left: 50%; width: 50px; height: 16px; margin-left: -25px;
   background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(30, 42, 37, 0.25); transform: rotate(-3deg);
