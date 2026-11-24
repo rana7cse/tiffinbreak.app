@@ -15,6 +15,7 @@ import { SiteHeader } from "~/components/site-header";
 import { bn } from "~/lib/bangla-digits";
 import { getWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
+import { siteShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/home";
 
@@ -24,8 +25,11 @@ export const handle = {
   shellClass: ["tb-app--ruled", "tb-anim"],
 } satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.brand.name }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: strings.brand.name },
+    ...(loaderData ? siteShareMeta(loaderData.origin) : []),
+  ];
 }
 
 type NoteStyle = {
@@ -77,6 +81,7 @@ const stepColors = ["yellow", "mint", "pink"] as const;
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await getWriter({ request, context });
   return {
+    origin: new URL(request.url).origin,
     writer: session
       ? { name: session.user.name, image: session.user.image }
       : null,

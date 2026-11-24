@@ -10,31 +10,30 @@ const get = (id: string, cookie?: string) =>
   });
 
 describe("Story page (GET /stories/:id)", () => {
-  describe("logged out (ADR-0001 share preview)", () => {
-    it("serves the login page with OG/Twitter tags and no body text", async () => {
-      const { story } = await createStory({
+  describe("logged out (public Story pages, temporary owner decision)", () => {
+    it("renders the full Story with a login CTA instead of Love", async () => {
+      const { story, writer, school } = await createStory({
         title: "টিফিনের পরোটা",
-        body: "গোপন অনুচ্ছেদ একটাই।",
+        body: "প্রথম অনুচ্ছেদ।\n\nগোপন নয় এমন দ্বিতীয় অনুচ্ছেদ।",
         coverKey: "covers/abc.jpg",
       });
       const res = await get(story.id);
       expect(res.status).toBe(200);
       const html = await res.text();
-
-      expect(html).toContain('property="og:title" content="টিফিনের পরোটা"');
+      expect(html).toContain("<h1");
+      expect(html).toContain("টিফিনের পরোটা");
+      expect(html).toContain("<p>প্রথম অনুচ্ছেদ।</p>");
+      expect(html).toContain("<p>গোপন নয় এমন দ্বিতীয় অনুচ্ছেদ।</p>");
+      expect(html).toContain("/covers/abc.jpg");
+      expect(html).toContain(writer?.name);
+      expect(html).toContain(school.name);
+      // No Love or Report for a visitor: a login CTA takes their place.
+      expect(html).not.toContain('aria-label="ভালোবাসা দাও"');
+      expect(html).not.toContain("রিপোর্ট করো");
+      expect(html).toContain("লগইন করে ভালোবাসা দাও");
       expect(html).toContain(
-        'property="og:image" content="http://example.com/covers/abc.jpg"',
+        `href="/login?returnTo=${encodeURIComponent(`/stories/${story.id}`)}"`,
       );
-      expect(html).toContain(
-        `property="og:url" content="http://example.com/stories/${story.id}"`,
-      );
-      expect(html).toContain('name="twitter:card"');
-      expect(html).toContain('name="twitter:title" content="টিফিনের পরোটা"');
-      expect(html).toContain("গল্পকার"); // Writer's first name
-      expect(html).not.toContain("গোপন অনুচ্ছেদ");
-      // It is the login page, and login returns to the Story.
-      expect(html).toContain("/login/google");
-      expect(html).toContain(`value="/stories/${story.id}"`);
     });
 
     it("redirects a logged-out POST to login", async () => {
@@ -51,28 +50,110 @@ describe("Story page (GET /stories/:id)", () => {
       expect(res.headers.get("location")).toContain("/login?returnTo=");
     });
 
-    it("omits og:image when the Story has no cover", async () => {
-      const { story } = await createStory();
-      const html = await (await get(story.id)).text();
-      expect(html).toContain('property="og:title"');
-      expect(html).not.toContain("og:image");
-    });
-
-    it("leaks nothing for hidden or unknown Stories", async () => {
+    it("is a 404 for hidden and unknown Stories", async () => {
       const { story } = await createStory({ hidden: true });
       for (const id of [story.id, "nope"]) {
-        const res = await get(id);
-        expect(res.status).toBe(302);
-        expect(res.headers.get("location")).toContain("/login?returnTo=");
+        expect((await get(id)).status).toBe(404);
       }
+    });
+
+    it("serves 200 with tags to Facebook's crawler, no redirect", async () => {
+      const { story } = await createStory();
+      const res = await exports.default.fetch(
+        `http://example.com/stories/${story.id}`,
+        {
+          headers: { "user-agent": "facebookexternalhit/1.1" },
+          redirect: "manual",
+        },
+      );
+      expect(res.status).toBe(200);
+      expect(await res.text()).toContain('property="og:title"');
     });
   });
 
-  it("logged-in Story page has no share-preview tags and a share button", async () => {
-    const { story, cookie } = await createStory();
+  describe("share metadata", () => {
+    const tag = (html: string, key: string) =>
+      html.match(
+        new RegExp(`<meta (?:property|name)="${key}" content="([^"]*)"`),
+      )?.[1];
+
+    it("describes the Story with an excerpt and the full Writer name", async () => {
+      const body = `${Array.from({ length: 80 }, (_, i) => `শব্দ${i}`).join(" ")}\n\nশেষ।`;
+      const { story, writer, school } = await createStory({
+        title: "টিফিনের পরোটা",
+        body,
+        coverKey: "covers/abc.jpg",
+      });
+      const html = await (await get(story.id)).text();
+      const id = story.id;
+
+      const description = tag(html, "og:description") ?? "";
+      expect(description).toMatch(/^শব্দ0 শব্দ1 /);
+      expect(description).toContain("… — ");
+      expect(description).toContain(`${writer?.name}, ${school.name}`);
+      expect(description).not.toContain("লগইন");
+      const excerpt = description.split("… — ")[0] ?? "";
+      expect(excerpt.length).toBeLessThanOrEqual(160);
+      expect(excerpt).not.toMatch(/\s$/);
+      expect(tag(html, "twitter:description")).toBe(description);
+      expect(tag(html, "description")).toBe(description);
+
+      expect(tag(html, "og:title")).toBe("টিফিনের পরোটা");
+      expect(tag(html, "twitter:title")).toBe("টিফিনের পরোটা");
+      expect(html).toContain("<title>টিফিনের পরোটা | টিফিনব্রেক</title>");
+      expect(tag(html, "og:site_name")).toBe("টিফিনব্রেক");
+      expect(tag(html, "og:locale")).toBe("bn_BD");
+      expect(tag(html, "og:type")).toBe("article");
+      expect(tag(html, "og:url")).toBe(`http://example.com/stories/${id}`);
+      expect(html).toContain(
+        `<link rel="canonical" href="http://example.com/stories/${id}"`,
+      );
+      expect(tag(html, "article:author")).toBe(writer?.name);
+      expect(tag(html, "article:published_time")).toMatch(
+        /^\d{4}-\d{2}-\d{2}T/,
+      );
+      expect(tag(html, "og:image")).toBe("http://example.com/covers/abc.jpg");
+      expect(tag(html, "og:image:type")).toBe("image/jpeg");
+      expect(tag(html, "og:image:alt")).toBe("টিফিনের পরোটা");
+      expect(tag(html, "og:image:width")).toBeUndefined();
+      expect(tag(html, "twitter:image")).toBe(
+        "http://example.com/covers/abc.jpg",
+      );
+    });
+
+    it("keeps a short body whole, without an ellipsis", async () => {
+      const { story } = await createStory({ body: "ছোট\n\n  গল্প।" });
+      const html = await (await get(story.id)).text();
+      expect(tag(html, "og:description")).toMatch(/^ছোট গল্প। — /);
+    });
+
+    it("falls back to the default branded image without a cover", async () => {
+      const { story } = await createStory();
+      const html = await (await get(story.id)).text();
+      expect(tag(html, "og:image")).toBe("http://example.com/og-default.png");
+      expect(tag(html, "og:image:type")).toBe("image/png");
+      expect(tag(html, "og:image:width")).toBe("1200");
+      expect(tag(html, "og:image:height")).toBe("630");
+      expect(tag(html, "twitter:image")).toBe(
+        "http://example.com/og-default.png",
+      );
+    });
+
+    it("also carries the tags for a signed-in reader", async () => {
+      const { story, cookie } = await createStory();
+      const html = await (await get(story.id, cookie)).text();
+      expect(html).toContain('property="og:title"');
+      expect(html).toContain("বন্ধুদের পাঠাও");
+    });
+  });
+
+  it("logged-in Story page keeps Love and Report", async () => {
+    const { cookie } = await signInAs();
+    const { story } = await createStory();
     const html = await (await get(story.id, cookie)).text();
-    expect(html).not.toContain("og:title");
-    expect(html).toContain("বন্ধুদের পাঠাও");
+    expect(html).toContain('aria-label="ভালোবাসা দাও"');
+    expect(html).toContain("রিপোর্ট করো");
+    expect(html).not.toContain("লগইন করে ভালোবাসা দাও");
   });
 
   it("renders title, body, Writer, School, date and reading time", async () => {

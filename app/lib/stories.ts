@@ -55,9 +55,12 @@ export async function getStoryById(
 /** Hidden Stories are visible only to their Writer and Admins. */
 export function canReadStory(
   s: Pick<StoryView, "hidden" | "writer">,
-  reader: { id: string; role?: string | null },
+  reader: { id: string; role?: string | null } | null,
 ): boolean {
-  return !s.hidden || s.writer.id === reader.id || reader.role === "admin";
+  if (!s.hidden) return true;
+  return (
+    reader !== null && (s.writer.id === reader.id || reader.role === "admin")
+  );
 }
 
 /** Whole minutes (at least 1) to read `body`, at about 200 words a minute. */
