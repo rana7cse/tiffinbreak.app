@@ -169,7 +169,7 @@ function ReadStory({ s }: { s: ReadData }) {
       <header className="tb-header tb-header--compact tb-header--reading">
         <a
           className="tb-icon-btn"
-          href="/feed"
+          href={s.signedIn ? "/feed" : "/"}
           aria-label={strings.nav.backToFeed}
         >
           <BackIcon size={22} color="var(--tb-ink)" />
