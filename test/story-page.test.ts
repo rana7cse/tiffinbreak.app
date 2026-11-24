@@ -98,18 +98,19 @@ describe("Story page (GET /stories/:id)", () => {
       const id = story.id;
 
       const description = tag(html, "og:description") ?? "";
-      expect(description).toMatch(/^শব্দ0 শব্দ1 /);
-      expect(description).toContain("… — ");
-      expect(description).toContain(`${writer?.name}, ${school.name}`);
+      const byline = `লিখেছেন ${writer?.name}, ${school.name}। `;
+      expect(description.startsWith(byline)).toBe(true);
+      expect(description).toMatch(/শব্দ0 শব্দ1 .*…$/);
       expect(description).not.toContain("লগইন");
-      const excerpt = description.split("… — ")[0] ?? "";
+      const excerpt = description.slice(byline.length, -1);
       expect(excerpt.length).toBeLessThanOrEqual(160);
       expect(excerpt).not.toMatch(/\s$/);
       expect(tag(html, "twitter:description")).toBe(description);
       expect(tag(html, "description")).toBe(description);
 
-      expect(tag(html, "og:title")).toBe("টিফিনের পরোটা");
-      expect(tag(html, "twitter:title")).toBe("টিফিনের পরোটা");
+      expect(tag(html, "og:title")).toBe(`টিফিনের পরোটা — ${writer?.name}`);
+      expect(tag(html, "twitter:title")).toBe(`টিফিনের পরোটা — ${writer?.name}`);
+      expect(tag(html, "author")).toBe(writer?.name);
       expect(html).toContain("<title>টিফিনের পরোটা | টিফিনব্রেক</title>");
       expect(tag(html, "og:site_name")).toBe("টিফিনব্রেক");
       expect(tag(html, "og:locale")).toBe("bn_BD");
@@ -124,7 +125,10 @@ describe("Story page (GET /stories/:id)", () => {
       );
       expect(tag(html, "og:image")).toBe("http://example.com/covers/abc.jpg");
       expect(tag(html, "og:image:type")).toBe("image/jpeg");
-      expect(tag(html, "og:image:alt")).toBe("টিফিনের পরোটা");
+      expect(tag(html, "og:image:alt")).toBe(
+        `“টিফিনের পরোটা” গল্পের ছবি, লিখেছেন ${writer?.name}`,
+      );
+      expect(tag(html, "twitter:image:alt")).toBe(tag(html, "og:image:alt"));
       expect(tag(html, "og:image:width")).toBeUndefined();
       expect(tag(html, "twitter:image")).toBe(
         "http://example.com/covers/abc.jpg",
@@ -134,7 +138,7 @@ describe("Story page (GET /stories/:id)", () => {
     it("keeps a short body whole, without an ellipsis", async () => {
       const { story } = await createStory({ body: "ছোট\n\n  গল্প।" });
       const html = await (await get(story.id)).text();
-      expect(tag(html, "og:description")).toMatch(/^ছোট গল্প। — /);
+      expect(tag(html, "og:description")).toMatch(/। ছোট গল্প।$/);
     });
 
     it("falls back to the default branded image without a cover", async () => {

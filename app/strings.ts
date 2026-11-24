@@ -187,8 +187,13 @@ export const strings = {
     sendToFriends: "বন্ধুদের পাঠাও",
     linkCopied: "লিংক কপি হয়েছে",
     copyLink: "লিংকটা কপি করে বন্ধুদের পাঠাও",
+    /** Share-card title: the Story, then who wrote it. */
+    shareTitle: (title: string, writer: string) => `${title} — ${writer}`,
+    /** Writer and School first, so a cut-off preview still says who wrote it. */
     shareDescription: (excerpt: string, writer: string, school: string) =>
-      `${excerpt} — ${writer}, ${school}`,
+      `লিখেছেন ${writer}, ${school}। ${excerpt}`,
+    shareImageAlt: (title: string, writer: string) =>
+      `“${title}” গল্পের ছবি, লিখেছেন ${writer}`,
     loginToLove: "লগইন করে ভালোবাসা দাও",
     moreFrom: (name: string) => `${name}র আরও গল্প পড়ো`,
     months: [

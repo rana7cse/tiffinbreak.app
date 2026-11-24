@@ -55,13 +55,16 @@ export function sharePreviewMeta(p: SharePreview) {
   const ext = p.cover?.split(".").pop()?.toLowerCase() ?? "";
   const image = p.cover ?? `${p.origin}${DEFAULT_SHARE_IMAGE.path}`;
   const imageType = p.cover ? IMAGE_TYPES[ext] : DEFAULT_SHARE_IMAGE.type;
+  const title = strings.story.shareTitle(p.title, p.author);
+  const imageAlt = strings.story.shareImageAlt(p.title, p.author);
   return [
     { name: "description", content: p.description },
+    { name: "author", content: p.author },
     { tagName: "link", rel: "canonical", href: p.url },
     { property: "og:type", content: "article" },
     { property: "og:site_name", content: strings.brand.name },
     { property: "og:locale", content: "bn_BD" },
-    { property: "og:title", content: p.title },
+    { property: "og:title", content: title },
     { property: "og:description", content: p.description },
     { property: "og:url", content: p.url },
     {
@@ -83,11 +86,12 @@ export function sharePreviewMeta(p: SharePreview) {
             content: String(DEFAULT_SHARE_IMAGE.height),
           },
         ]),
-    { property: "og:image:alt", content: p.title },
+    { property: "og:image:alt", content: imageAlt },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: p.title },
+    { name: "twitter:title", content: title },
     { name: "twitter:description", content: p.description },
     { name: "twitter:image", content: image },
+    { name: "twitter:image:alt", content: imageAlt },
   ];
 }
 
