@@ -23,9 +23,9 @@ export const strings = {
     pageTitle: (page: string) => `${page} | টিফিনব্রেক`,
     /** Default share-card description (meta description, og:description). */
     siteDescription:
-      "শেষ বেঞ্চের আড্ডা, ভাগ করে খাওয়া টিফিন, পরীক্ষার আগের রাতের টেনশন। সেই গল্পগুলো এখানে লিখে রাখো।",
-    /** og:title for the home page, more inviting than the bare brand name. */
-    homeShareTitle: "টিফিনব্রেক — স্কুলের সেই দিনগুলো মনে পড়ে?",
+      "স্কুল ও কলেজ লাইফের পুরোনো আর্কাইভ, যেখানে শেষ বেঞ্চের আড্ডা, ভাগ করে খাওয়া টিফিন, পরীক্ষার আগের রাতের টেনশন। সেই গল্পগুলো এখানে লিখে রাখো, পুরোনো বন্ধুদের সাথে আবার একটু হাসো।",
+    /** Home page <title> and og:title: the brand first, then what the site is. */
+    homeShareTitle: "টিফিনব্রেক — স্কুল লাইফের রিক্যাপ",
     schoolDescription: (school: string) => `${school}-এর স্কুলজীবনের গল্প`,
     writerDescription: (name: string) => `${name}-এর লেখা গল্প`,
   },

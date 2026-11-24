@@ -38,10 +38,10 @@ function expectFullShareTags(html: string, url: string) {
 }
 
 describe("share tags on every page", () => {
-  it("home has the inviting og:title", async () => {
+  it("home leads with the brand in its og:title", async () => {
     const html = await getHtml("/?utm=x");
     expectFullShareTags(html, `${ORIGIN}/`);
-    expect(tag(html, "og:title")).toBe("টিফিনব্রেক — স্কুলের সেই দিনগুলো মনে পড়ে?");
+    expect(tag(html, "og:title")).toBe("টিফিনব্রেক — স্কুল লাইফের রিক্যাপ");
   });
 
   it("login", async () => {

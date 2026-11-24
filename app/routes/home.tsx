@@ -27,7 +27,7 @@ export const handle = {
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   return [
-    { title: strings.brand.name },
+    { title: strings.meta.homeShareTitle },
     ...(loaderData
       ? pageShareMeta({
           origin: loaderData.origin,
