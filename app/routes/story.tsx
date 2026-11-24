@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Form, redirect } from "react-router";
 import { Avatar } from "~/components/avatar";
 import { BackIcon, ChevronRightIcon, ShareIcon } from "~/components/icons";
-import { LoginScreen } from "~/components/login-screen";
 import { LoveActionButton, LoveBox, useLove } from "~/components/love-box";
 import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
@@ -22,7 +21,7 @@ import {
   readingTimeMinutes,
   reportStory,
 } from "~/lib/stories";
-import { coverUrl, sharePreviewMeta } from "~/lib/story-share";
+import { coverUrl, excerptOf, sharePreviewMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/story";
 
@@ -34,13 +33,11 @@ export const handle = {
 } as const satisfies ShellHandle;
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (loaderData?.preview) {
-    return [
-      { title: strings.meta.pageTitle(loaderData.preview.title) },
-      ...sharePreviewMeta(loaderData.preview),
-    ];
-  }
-  return [{ title: strings.meta.pageTitle(loaderData?.title ?? t.readTitle) }];
+  if (!loaderData) return [{ title: strings.meta.pageTitle(t.readTitle) }];
+  return [
+    { title: strings.meta.pageTitle(loaderData.title) },
+    ...sharePreviewMeta(loaderData.preview),
+  ];
 }
 
 const firstNameOf = (name: string) => name.split(/\s+/)[0] ?? name;
@@ -76,56 +73,54 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
+  // Public Story pages (signed out too) are a temporary owner decision,
+  // superseding the login wall of ADR-0001. Love, Report, Edit and Delete
+  // still need a session. Hidden Stories stay 404 for everyone but their
+  // Writer and Admins.
   const session = await getWriter({ request, context });
+  const user = session?.user ?? null;
   const { env } = context.get(cloudflareContext);
   const found = await getStoryById(env, params.id);
-  const url = new URL(request.url);
-
-  if (!session) {
-    // ADR-0001: logged-out visitors get the login page, with preview tags for
-    // crawlers. Hidden or missing Stories get a plain redirect: no leaks.
-    const returnTo = url.pathname + url.search;
-    if (!found || found.hidden) {
-      throw redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-    }
-    return {
-      preview: {
-        title: found.title,
-        description: t.shareDescription(firstNameOf(found.writer.name)),
-        url: url.origin + url.pathname,
-        image: coverUrl(url.origin, found.coverKey),
-      },
-      returnTo,
-    };
-  }
-
-  const { user } = session;
   if (!found || !canReadStory(found, user)) {
     throw new Response("Not Found", { status: 404 });
   }
+  const url = new URL(request.url);
+  const storyUrl = url.origin + url.pathname;
+  const excerpt = excerptOf(found.body);
   return {
-    preview: null,
+    preview: {
+      title: found.title,
+      description: strings.story.shareDescription(
+        excerpt,
+        found.writer.name,
+        found.school.name,
+      ),
+      url: storyUrl,
+      cover: coverUrl(url.origin, found.coverKey),
+      origin: url.origin,
+      publishedAt: found.createdAt,
+      author: found.writer.name,
+    },
+    signedIn: user !== null,
+    loginHref: `/login?returnTo=${encodeURIComponent(url.pathname)}`,
     id: found.id,
     title: found.title,
     paragraphs: paragraphs(found.body),
     coverKey: found.coverKey,
     loveTotal: found.loveTotal,
-    myLove: await getMyLove(env, found.id, user.id),
-    isOwn: found.writer.id === user.id,
+    myLove: user ? await getMyLove(env, found.id, user.id) : 0,
+    isOwn: user ? found.writer.id === user.id : false,
     date: formatStoryDate(found.createdAt),
     minutes: readingTimeMinutes(found.body),
     writer: found.writer,
     school: found.school,
-    canReport: found.writer.id !== user.id,
-    canEdit: canEditStory(found, user),
-    reported: await hasReported(env, found.id, user.id),
+    canReport: user ? found.writer.id !== user.id : false,
+    canEdit: user ? canEditStory(found, user) : false,
+    reported: user ? await hasReported(env, found.id, user.id) : false,
   };
 }
 
 export default function StoryPage({ loaderData }: Route.ComponentProps) {
-  if (loaderData.preview) {
-    return <LoginScreen returnTo={loaderData.returnTo} />;
-  }
   return <ReadStory s={loaderData} />;
 }
 
@@ -160,10 +155,7 @@ function ConfirmCard({
   );
 }
 
-type ReadData = Exclude<
-  Route.ComponentProps["loaderData"],
-  { preview: object }
->;
+type ReadData = Route.ComponentProps["loaderData"];
 
 function ReadStory({ s }: { s: ReadData }) {
   const love = useLove(s.id, { mine: s.myLove, total: s.loveTotal }, s.isOwn);
@@ -272,7 +264,17 @@ function ReadStory({ s }: { s: ReadData }) {
           • • •
         </div>
 
-        <LoveBox love={love} disabled={s.isOwn} />
+        {s.signedIn ? (
+          <LoveBox love={love} disabled={s.isOwn} />
+        ) : (
+          <a
+            className="tb-link"
+            href={s.loginHref}
+            style={{ display: "block", textAlign: "center" }}
+          >
+            {t.loginToLove}
+          </a>
+        )}
 
         {s.canEdit ? (
           <div
@@ -358,7 +360,17 @@ function ReadStory({ s }: { s: ReadData }) {
       </article>
 
       <nav className="tb-action-bar" aria-label={t.actions}>
-        <LoveActionButton love={love} disabled={s.isOwn} />
+        {s.signedIn ? (
+          <LoveActionButton love={love} disabled={s.isOwn} />
+        ) : (
+          <a
+            className="tb-btn tb-btn--pill"
+            href={s.loginHref}
+            style={{ fontSize: 16, color: "var(--tb-accent)" }}
+          >
+            {t.loginToLove}
+          </a>
+        )}
         <ShareButton
           path={path}
           title={s.title}
