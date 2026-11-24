@@ -7,6 +7,7 @@ import { cloudflareContext } from "~/context";
 import { countWriterStories, type FeedStory, listFeed } from "~/lib/feed";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/feed";
 
@@ -14,8 +15,19 @@ const t = strings.feed;
 
 export const handle = withNavShell satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.title) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.title);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.siteDescription,
+        })
+      : []),
+  ];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -25,6 +37,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await listFeed(env, cursor);
   const ownStories = await countWriterStories(env, user.id);
   return {
+    origin: new URL(request.url).origin,
     hasOwnStories: ownStories > 0,
     writer: { name: user.name, image: user.image },
     stories: page.stories,

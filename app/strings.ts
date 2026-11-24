@@ -21,6 +21,13 @@ export const strings = {
   /** Document titles, shown as "<page> | টিফিনব্রেক" via `pageTitle`. */
   meta: {
     pageTitle: (page: string) => `${page} | টিফিনব্রেক`,
+    /** Default share-card description (meta description, og:description). */
+    siteDescription:
+      "শেষ বেঞ্চের আড্ডা, ভাগ করে খাওয়া টিফিন, পরীক্ষার আগের রাতের টেনশন। সেই গল্পগুলো এখানে লিখে রাখো।",
+    /** og:title for the home page, more inviting than the bare brand name. */
+    homeShareTitle: "টিফিনব্রেক — স্কুলের সেই দিনগুলো মনে পড়ে?",
+    schoolDescription: (school: string) => `${school}-এর স্কুলজীবনের গল্প`,
+    writerDescription: (name: string) => `${name}-এর লেখা গল্প`,
   },
 
   nav: {

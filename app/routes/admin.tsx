@@ -10,13 +10,25 @@ import {
 } from "~/lib/admin";
 import { bn } from "~/lib/bangla-digits";
 import { requireAdmin } from "~/lib/require-writer";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/admin";
 
 const t = strings.admin;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.title) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.title);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.siteDescription,
+        })
+      : []),
+  ];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -24,6 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const url = new URL(request.url);
   return {
+    origin: new URL(request.url).origin,
     items: await listReviewItems(env),
     schools: await listSchoolNames(env),
     merged: url.searchParams.get("merged") === "1",

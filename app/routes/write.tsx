@@ -11,6 +11,7 @@ import type { ShellHandle } from "~/lib/shell";
 import { getLastSchoolOf, publishStory } from "~/lib/stories";
 import { clearDraft, loadDraft, saveDraft, wordCount } from "~/lib/story-draft";
 import { parseStoryForm, storyFormRateLimited } from "~/lib/story-form";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/write";
 
@@ -23,14 +24,29 @@ export const handle = {
   shellStyle: { height: "100vh", minHeight: 640 },
 } as const satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.title) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.title);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.siteDescription,
+        })
+      : []),
+  ];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireWriter({ request, context });
   const { env } = context.get(cloudflareContext);
-  return { writerId: user.id, lastSchool: await getLastSchoolOf(env, user.id) };
+  return {
+    origin: new URL(request.url).origin,
+    writerId: user.id,
+    lastSchool: await getLastSchoolOf(env, user.id),
+  };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {

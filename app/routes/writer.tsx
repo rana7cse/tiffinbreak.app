@@ -14,7 +14,7 @@ import { bn } from "~/lib/bangla-digits";
 import { formatStoryDate } from "~/lib/dhaka-date";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { coverUrl } from "~/lib/story-share";
+import { coverUrl, pageShareMeta } from "~/lib/story-share";
 import { getWriterProfile } from "~/lib/writers";
 import { strings } from "~/strings";
 import type { Route } from "./+types/writer";
@@ -23,8 +23,19 @@ const t = strings.writer;
 
 export const handle = withNavShell satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.publicProfile) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.publicProfile);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.writerDescription(loaderData.name),
+        })
+      : []),
+  ];
 }
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -33,6 +44,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const profile = await getWriterProfile(env, params.handle, user);
   if (!profile) throw new Response("Not Found", { status: 404 });
   return {
+    origin: new URL(request.url).origin,
     own: profile.id === user.id,
     name: profile.name,
     handle: profile.handle,

@@ -13,7 +13,7 @@ export function coverUrl(
 }
 
 export const DEFAULT_SHARE_IMAGE = {
-  path: "/og-default.png",
+  path: "/og-v2.png",
   type: "image/png",
   width: 1200,
   height: 630,
@@ -91,17 +91,40 @@ export function sharePreviewMeta(p: SharePreview) {
   ];
 }
 
-/** Site-wide default share tags for pages without their own (e.g. home). */
-export function siteShareMeta(origin: string) {
+/**
+ * Complete share tags (description, canonical, Open Graph, Twitter) for any
+ * page other than a Story. React Router does not merge parent meta, so every
+ * route emits its own. `path` is the pathname only: query strings are dropped
+ * from og:url and the canonical link.
+ */
+export function pageShareMeta(p: {
+  origin: string;
+  path: string;
+  title: string;
+  description: string;
+}) {
+  const url = `${p.origin}${p.path}`;
+  const image = `${p.origin}${DEFAULT_SHARE_IMAGE.path}`;
   return [
+    { name: "description", content: p.description },
+    { tagName: "link", rel: "canonical", href: url },
+    { property: "og:type", content: "website" },
     { property: "og:site_name", content: strings.brand.name },
     { property: "og:locale", content: "bn_BD" },
-    { property: "og:image", content: `${origin}${DEFAULT_SHARE_IMAGE.path}` },
+    { property: "og:title", content: p.title },
+    { property: "og:description", content: p.description },
+    { property: "og:url", content: url },
+    { property: "og:image", content: image },
     { property: "og:image:type", content: DEFAULT_SHARE_IMAGE.type },
     { property: "og:image:width", content: String(DEFAULT_SHARE_IMAGE.width) },
     {
       property: "og:image:height",
       content: String(DEFAULT_SHARE_IMAGE.height),
     },
+    { property: "og:image:alt", content: p.title },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: p.title },
+    { name: "twitter:description", content: p.description },
+    { name: "twitter:image", content: image },
   ];
 }

@@ -7,6 +7,7 @@ import { countSchoolStories, listSchoolStories } from "~/lib/feed";
 import { requireWriter } from "~/lib/require-writer";
 import { findSchoolById } from "~/lib/schools";
 import type { ShellHandle } from "~/lib/shell";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/school";
 
@@ -14,9 +15,18 @@ const t = strings.school;
 
 export const handle = withNavShell satisfies ShellHandle;
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(loaderData?.school.name ?? t.addTitle);
   return [
-    { title: strings.meta.pageTitle(loaderData?.school.name ?? t.addTitle) },
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.schoolDescription(loaderData.school.name),
+        })
+      : []),
   ];
 }
 
@@ -31,6 +41,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     countSchoolStories(env, school.id),
   ]);
   return {
+    origin: new URL(request.url).origin,
     writer: { name: user.name, image: user.image },
     school,
     total,

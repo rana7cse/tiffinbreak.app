@@ -15,7 +15,7 @@ import { SiteHeader } from "~/components/site-header";
 import { bn } from "~/lib/bangla-digits";
 import { getWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { siteShareMeta } from "~/lib/story-share";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/home";
 
@@ -25,10 +25,17 @@ export const handle = {
   shellClass: ["tb-app--ruled", "tb-anim"],
 } satisfies ShellHandle;
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
   return [
     { title: strings.brand.name },
-    ...(loaderData ? siteShareMeta(loaderData.origin) : []),
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title: strings.meta.homeShareTitle,
+          description: strings.meta.siteDescription,
+        })
+      : []),
   ];
 }
 

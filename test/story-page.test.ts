@@ -140,13 +140,11 @@ describe("Story page (GET /stories/:id)", () => {
     it("falls back to the default branded image without a cover", async () => {
       const { story } = await createStory();
       const html = await (await get(story.id)).text();
-      expect(tag(html, "og:image")).toBe("http://example.com/og-default.png");
+      expect(tag(html, "og:image")).toBe("http://example.com/og-v2.png");
       expect(tag(html, "og:image:type")).toBe("image/png");
       expect(tag(html, "og:image:width")).toBe("1200");
       expect(tag(html, "og:image:height")).toBe("630");
-      expect(tag(html, "twitter:image")).toBe(
-        "http://example.com/og-default.png",
-      );
+      expect(tag(html, "twitter:image")).toBe("http://example.com/og-v2.png");
     });
 
     it("also carries the tags for a signed-in reader", async () => {

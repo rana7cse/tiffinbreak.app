@@ -14,6 +14,7 @@ import {
   updateStory,
 } from "~/lib/stories";
 import { parseStoryForm, storyFormRateLimited } from "~/lib/story-form";
+import { pageShareMeta } from "~/lib/story-share";
 import { strings } from "~/strings";
 import type { Route } from "./+types/story-edit";
 
@@ -23,8 +24,19 @@ export const handle = {
   shellClass: ["tb-app--reading"],
 } as const satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.editTitle) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.editTitle);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.siteDescription,
+        })
+      : []),
+  ];
 }
 
 /** The Story to edit: 404 when unknown or unreadable, 403 unless the owner. */
@@ -48,6 +60,7 @@ async function loadOwnStory(args: {
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { found } = await loadOwnStory({ request, context, id: params.id });
   return {
+    origin: new URL(request.url).origin,
     id: found.id,
     title: found.title,
     body: found.body,

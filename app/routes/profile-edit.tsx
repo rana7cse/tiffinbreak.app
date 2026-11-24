@@ -22,7 +22,7 @@ import {
 import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { coverUrl } from "~/lib/story-share";
+import { coverUrl, pageShareMeta } from "~/lib/story-share";
 import {
   getWriterImage,
   handleTaken,
@@ -35,8 +35,19 @@ const t = strings.editProfile;
 
 export const handle = withNavShell satisfies ShellHandle;
 
-export function meta(_: Route.MetaArgs) {
-  return [{ title: strings.meta.pageTitle(t.title) }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const title = strings.meta.pageTitle(t.title);
+  return [
+    { title },
+    ...(loaderData
+      ? pageShareMeta({
+          origin: loaderData.origin,
+          path: location.pathname,
+          title,
+          description: strings.meta.siteDescription,
+        })
+      : []),
+  ];
 }
 
 type Me = { id: string; name: string; image?: string | null; handle?: string };
@@ -45,6 +56,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireWriter({ request, context });
   const me = user as Me;
   return {
+    origin: new URL(request.url).origin,
     name: me.name,
     handle: me.handle ?? "",
     image: me.image ?? null,
