@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import { Form, redirect } from "react-router";
 import { Avatar } from "~/components/avatar";
-import { BackIcon, ChevronRightIcon, ShareIcon } from "~/components/icons";
+import {
+  BackIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  ShareIcon,
+} from "~/components/icons";
 import { LoveActionButton, LoveBox, useLove } from "~/components/love-box";
 import { ShareButton } from "~/components/share-button";
 import { cloudflareContext } from "~/context";
@@ -9,6 +14,7 @@ import { bn } from "~/lib/bangla-digits";
 import { formatStoryDate } from "~/lib/dhaka-date";
 import { getMyLove } from "~/lib/love";
 import { overLimit, tooManyRequestsText } from "~/lib/rate-limit";
+import { recordRead } from "~/lib/reads";
 import { getWriter, requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
 import {
@@ -84,6 +90,13 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!found || !canReadStory(found, user)) {
     throw new Response("Not Found", { status: 404 });
   }
+  // A Read: a signed-in reader who is not the Writer. Awaited (one small
+  // batch) so the page shows the count including this reader.
+  const countsAsRead =
+    user !== null && !found.hidden && found.writer.id !== user.id;
+  const readTotal = countsAsRead
+    ? await recordRead(env, found.id, user.id)
+    : found.readTotal;
   const url = new URL(request.url);
   const storyUrl = url.origin + url.pathname;
   const excerpt = excerptOf(found.body);
@@ -108,6 +121,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     paragraphs: paragraphs(found.body),
     coverKey: found.coverKey,
     loveTotal: found.loveTotal,
+    readTotal,
     myLove: user ? await getMyLove(env, found.id, user.id) : 0,
     isOwn: user ? found.writer.id === user.id : false,
     date: formatStoryDate(found.createdAt),
@@ -360,17 +374,27 @@ function ReadStory({ s }: { s: ReadData }) {
       </article>
 
       <nav className="tb-action-bar" aria-label={t.actions}>
-        {s.signedIn ? (
-          <LoveActionButton love={love} disabled={s.isOwn} />
-        ) : (
-          <a
-            className="tb-btn tb-btn--pill"
-            href={s.loginHref}
-            style={{ fontSize: 16, color: "var(--tb-accent)" }}
+        <div className="tb-action-bar__stats">
+          {s.signedIn ? (
+            <LoveActionButton love={love} disabled={s.isOwn} />
+          ) : (
+            <a
+              className="tb-btn tb-btn--pill"
+              href={s.loginHref}
+              style={{ fontSize: 16, color: "var(--tb-accent)" }}
+            >
+              {t.loginToLove}
+            </a>
+          )}
+          <span
+            className="tb-reads"
+            role="img"
+            aria-label={t.readCount(bn(s.readTotal))}
           >
-            {t.loginToLove}
-          </a>
-        )}
+            <EyeIcon size={22} />
+            <span>{bn(s.readTotal)}</span>
+          </span>
+        </div>
         <ShareButton
           path={path}
           title={s.title}

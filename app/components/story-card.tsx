@@ -1,5 +1,5 @@
 import { Avatar } from "~/components/avatar";
-import { HeartIcon, ShareIcon } from "~/components/icons";
+import { EyeIcon, HeartIcon, ShareIcon } from "~/components/icons";
 import { ShareButton } from "~/components/share-button";
 import { bn } from "~/lib/bangla-digits";
 import { relativeTime } from "~/lib/dhaka-date";
@@ -75,16 +75,26 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
           <p className="tb-story-card__excerpt">{s.excerpt}</p>
         </a>
         <div className="tb-story-card__actions">
-          {/* Giving Love happens on the Story page; the card links there. */}
-          <a
-            className="tb-love"
-            href={storyHref}
-            aria-label={strings.love.give}
-            style={{ textDecoration: "none" }}
-          >
-            <HeartIcon />
-            <span className="tb-love__count">{bn(s.loveTotal)}</span>
-          </a>
+          <div className="tb-story-card__stats">
+            {/* Giving Love happens on the Story page; the card links there. */}
+            <a
+              className="tb-love"
+              href={storyHref}
+              aria-label={strings.love.give}
+              style={{ textDecoration: "none" }}
+            >
+              <HeartIcon />
+              <span className="tb-love__count">{bn(s.loveTotal)}</span>
+            </a>
+            <span
+              className="tb-reads"
+              role="img"
+              aria-label={strings.story.readCount(bn(s.readTotal ?? 0))}
+            >
+              <EyeIcon size={20} />
+              <span>{bn(s.readTotal ?? 0)}</span>
+            </span>
+          </div>
           <ShareButton
             path={storyHref}
             title={s.title}

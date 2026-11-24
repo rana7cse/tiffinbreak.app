@@ -287,6 +287,13 @@ img, svg { display: block; }
 .tb-love svg { fill: none; stroke: var(--tb-accent); }
 .tb-love[aria-pressed="true"] svg { fill: var(--tb-accent); }
 
+.tb-story-card__stats, .tb-action-bar__stats { display: flex; align-items: center; gap: 4px; }
+.tb-reads {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 16px; font-weight: 600; color: var(--tb-muted);
+}
+.tb-reads svg { stroke: var(--tb-muted); }
+
 /* photo placeholder */
 .tb-photo {
   display: flex; align-items: center; justify-content: center;

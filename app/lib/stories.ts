@@ -11,6 +11,7 @@ export type StoryView = {
   body: string;
   coverKey: string | null;
   loveTotal: number;
+  readTotal: number;
   hidden: boolean;
   createdAt: Date;
   writer: {
@@ -34,6 +35,7 @@ export async function getStoryById(
       body: story.body,
       coverKey: story.coverKey,
       loveTotal: story.loveTotal,
+      readTotal: story.readTotal,
       hidden: story.hidden,
       createdAt: story.createdAt,
       writer: {

@@ -64,6 +64,13 @@
       "when": 1795474448555,
       "tag": "0008_dark_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795480351640,
+      "tag": "0009_great_squadron_sinister",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,8 @@ export type FeedStory = {
   excerpt: string;
   coverKey: string | null;
   loveTotal: number;
+  /** Missing in feed pages cached before Read existed; treat as 0. */
+  readTotal?: number;
   /** Epoch milliseconds. */
   createdAt: number;
   writer: {
@@ -102,6 +104,7 @@ async function queryFeed(
       body: story.body,
       coverKey: story.coverKey,
       loveTotal: story.loveTotal,
+      readTotal: story.readTotal,
       createdAt: story.createdAt,
       writer: {
         id: user.id,

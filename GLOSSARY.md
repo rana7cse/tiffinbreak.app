@@ -20,6 +20,10 @@ _Avoid_: Institution, college (as a separate concept)
 A reader's appreciation of a Story, given by tapping; one reader can give a Story up to 10 Love.
 _Avoid_: Like, reaction, heart
 
+**Read**:
+A signed-in reader opening a Story. Counted once per reader per Story; the Writer's own visits and logged-out visits do not count.
+_Avoid_: View, hit, impression
+
 **Feed**:
 All published Stories, newest first.
 _Avoid_: Timeline, home

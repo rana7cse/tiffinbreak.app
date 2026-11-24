@@ -175,6 +175,7 @@ export const strings = {
     readingTime: (minutes: string) => `${minutes} মিনিটের গল্প`,
     loveBoxTitle: "গল্পটা ছুঁয়ে গেলে একটু ভালোবাসা দাও",
     loveCount: "ভালোবাসা",
+    readCount: (n: string) => `${n} জন পড়েছে`,
     sendToFriends: "বন্ধুদের পাঠাও",
     linkCopied: "লিংক কপি হয়েছে",
     copyLink: "লিংকটা কপি করে বন্ধুদের পাঠাও",

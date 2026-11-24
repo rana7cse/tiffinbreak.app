@@ -141,9 +141,9 @@ export const school = sqliteTable("school", {
 
 /**
  * A Story (see GLOSSARY.md): a short memory by a Writer about one School.
- * `coverKey` is the R2 object key of the optional cover photo. `loveTotal`
- * and `reportCount` are denormalised counters kept by the Love and Report
- * tickets; `hidden` is set once a Story has enough Reports (until an Admin
+ * `coverKey` is the R2 object key of the optional cover photo. `loveTotal`,
+ * `readTotal` and `reportCount` are denormalised counters kept by Love, Read
+ * and Report; `hidden` is set once a Story has enough Reports (until an Admin
  * reviews it).
  */
 export const story = sqliteTable(
@@ -160,6 +160,7 @@ export const story = sqliteTable(
     body: text("body").notNull(),
     coverKey: text("cover_key"),
     loveTotal: integer("love_total").default(0).notNull(),
+    readTotal: integer("read_total").default(0).notNull(),
     reportCount: integer("report_count").default(0).notNull(),
     hidden: integer("hidden", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
@@ -203,6 +204,28 @@ export const love = sqliteTable(
     primaryKey({ columns: [t.storyId, t.readerId] }),
     check("love_count_range", sql`${t.count} between 1 and 10`),
   ],
+);
+
+/**
+ * Read (see GLOSSARY.md): one signed-in reader has opened one Story, at most
+ * once per pair and never by the Writer. `story.readTotal` is the
+ * denormalised row count per Story, rewritten in the same batch as every
+ * insert (see `recordRead`).
+ */
+export const storyRead = sqliteTable(
+  "story_read",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => story.id, { onDelete: "cascade" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(nowMs)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.readerId] })],
 );
 
 /**
