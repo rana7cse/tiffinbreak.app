@@ -8,7 +8,7 @@ import { bn } from "~/lib/bangla-digits";
 import { overLimit } from "~/lib/rate-limit";
 import { requireWriter } from "~/lib/require-writer";
 import type { ShellHandle } from "~/lib/shell";
-import { publishStory } from "~/lib/stories";
+import { getLastSchoolOf, publishStory } from "~/lib/stories";
 import { clearDraft, loadDraft, saveDraft, wordCount } from "~/lib/story-draft";
 import { parseStoryForm, storyFormRateLimited } from "~/lib/story-form";
 import { strings } from "~/strings";
@@ -29,7 +29,8 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireWriter({ request, context });
-  return { writerId: user.id };
+  const { env } = context.get(cloudflareContext);
+  return { writerId: user.id, lastSchool: await getLastSchoolOf(env, user.id) };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -70,14 +71,17 @@ export default function Write({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { writerId } = loaderData;
+  const { writerId, lastSchool } = loaderData;
   const returned = actionData?.values;
   const errors: Record<string, string | undefined> = actionData?.errors ?? {};
 
   const [title, setTitle] = useState(returned?.title ?? "");
   const [body, setBody] = useState(returned?.body ?? "");
-  const [school, setSchool] = useState(returned?.school ?? null);
-  const [sheetOpen, setSheetOpen] = useState(!returned?.school);
+  const [school, setSchool] = useState(returned ? returned.school : lastSchool);
+  // The sheet opens by itself only when there is no School to start from.
+  const [sheetOpen, setSheetOpen] = useState(
+    !(returned ? returned.school : lastSchool),
+  );
   const [promptIndex, setPromptIndex] = useState(0);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const restored = useRef(false);

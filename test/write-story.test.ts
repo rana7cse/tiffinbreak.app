@@ -38,6 +38,84 @@ describe("GET /write", () => {
   });
 });
 
+describe("GET /write School pre-fill", () => {
+  const getForm = async (cookie: string) =>
+    (
+      await exports.default.fetch(`${ORIGIN}/write`, { headers: { cookie } })
+    ).text();
+  const prefilled = (html: string, id: string) =>
+    html.includes('name="schoolId"') && html.includes(`value="${id}"`);
+
+  it("is empty and opens the School sheet for a Writer with no Stories", async () => {
+    const { cookie } = await signInAs();
+    const html = await getForm(cookie);
+    expect(html).toMatch(
+      /name="schoolId"[^>]*value=""|value=""[^>]*name="schoolId"/,
+    );
+    expect(html).toContain('role="dialog"');
+  });
+
+  it("pre-fills the last School and keeps the sheet closed", async () => {
+    const { cookie, writer } = await signInAs();
+    const { school } = await createStory({ writerId: writer.id });
+    const html = await getForm(cookie);
+    expect(prefilled(html, school.id)).toBe(true);
+    expect(html).toContain(school.name);
+    expect(html).not.toContain('role="dialog"');
+  });
+
+  it("uses the most recent Story, hidden or not", async () => {
+    const { cookie, writer } = await signInAs();
+    await createStory({ writerId: writer.id, createdAt: new Date(1000) });
+    const b = await createStory({
+      writerId: writer.id,
+      hidden: true,
+      createdAt: new Date(2000),
+    });
+    const html = await getForm(cookie);
+    expect(prefilled(html, b.school.id)).toBe(true);
+  });
+
+  it("creates the Story at the pre-filled School when posted untouched", async () => {
+    const { cookie, writer } = await signInAs();
+    const { school } = await createStory({ writerId: writer.id });
+    const html = await getForm(cookie);
+    expect(prefilled(html, school.id)).toBe(true);
+    const res = await publish(cookie, {
+      title: "নতুন",
+      body: "গল্প",
+      schoolId: school.id,
+      schoolName: school.name,
+    });
+    const id = (res.headers.get("location") ?? "").split("/").pop();
+    const row = await env.DB.prepare("SELECT school_id FROM story WHERE id = ?")
+      .bind(id)
+      .first();
+    expect(row).toEqual({ school_id: school.id });
+  });
+
+  it("ignores another Writer's Stories", async () => {
+    const { cookie } = await signInAs();
+    const other = await createStory();
+    const html = await getForm(cookie);
+    expect(html).not.toContain(other.school.id);
+  });
+
+  it("lets the submitted School win after a validation error", async () => {
+    const { cookie, writer } = await signInAs();
+    await createStory({ writerId: writer.id });
+    const other = await createStory();
+    const res = await publish(cookie, {
+      title: "",
+      body: "গল্প",
+      schoolId: other.school.id,
+    });
+    expect(res.status).toBe(400);
+    const html = await res.text();
+    expect(prefilled(html, other.school.id)).toBe(true);
+  });
+});
+
 describe("POST /write", () => {
   it("is login-walled", async () => {
     const res = await exports.default.fetch(`${ORIGIN}/write`, {

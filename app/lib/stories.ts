@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db";
 import { report, school, story, user } from "~/db/schema";
 import { deleteCover, storeCover } from "~/lib/cover";
@@ -221,4 +221,23 @@ export async function reportStory(
     .where(eq(story.id, storyId))
     .returning({ hidden: story.hidden });
   if (updated[0]?.hidden) await bumpFeedVersion(env.CACHE);
+}
+
+/**
+ * The School of the Writer's most recently created Story (hidden ones
+ * included), or null when they have none. Pre-fills the new-Story form.
+ */
+export async function getLastSchoolOf(
+  env: Pick<Env, "DB">,
+  writerId: string,
+): Promise<{ id: string; name: string } | null> {
+  const row = await getDb(env.DB)
+    .select({ id: school.id, name: school.name })
+    .from(story)
+    .innerJoin(school, eq(story.schoolId, school.id))
+    .where(eq(story.writerId, writerId))
+    .orderBy(desc(story.createdAt))
+    .limit(1)
+    .get();
+  return row ?? null;
 }
