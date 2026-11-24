@@ -36,6 +36,16 @@ describe("Story page (GET /stories/:id)", () => {
       );
     });
 
+    it("sends the back arrow home when signed out, to the feed when signed in", async () => {
+      const { story } = await createStory();
+      const back = /<a[^>]*class="tb-icon-btn"[^>]*>/;
+      const out = (await (await get(story.id)).text()).match(back)?.[0];
+      expect(out).toContain('href="/"');
+      const { cookie } = await signInAs();
+      const inn = (await (await get(story.id, cookie)).text()).match(back)?.[0];
+      expect(inn).toContain('href="/feed"');
+    });
+
     it("redirects a logged-out POST to login", async () => {
       const { story } = await createStory();
       const res = await exports.default.fetch(
