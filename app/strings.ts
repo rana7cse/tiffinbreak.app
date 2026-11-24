@@ -33,6 +33,7 @@ export const strings = {
   nav: {
     label: "প্রধান মেনু",
     home: "হোম",
+    feed: "ফিড",
     write: "লেখো",
     profile: "প্রোফাইল",
     myProfile: "আমার প্রোফাইল",

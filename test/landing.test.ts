@@ -100,10 +100,17 @@ describe("landing page when signed in", () => {
     expect(html).toMatch(/tb-avatar[^>]*>R<\/span>/);
   });
 
-  it("keeps logout reachable and drops the login pill", async () => {
+  it("links the header to the Feed and the avatar to the profile", async () => {
     const html = await getAs({ name: "Rafi Ahmed" });
+    const header = html.match(
+      /<header class="tb-header">[\s\S]*?<\/header>/,
+    )?.[0];
 
-    expect(html).toContain('action="/logout"');
+    expect(header).toMatch(/<a class="tb-brand" href="\/feed"/);
+    expect(header).toMatch(/<a [^>]*href="\/feed"[^>]*>ফিড<\/a>/);
+    expect(header).toMatch(
+      /<a [^>]*href="\/profile"[^>]*aria-label="আমার প্রোফাইল"/,
+    );
     expect(html).not.toMatch(/<a [^>]*href="\/login"/);
   });
 

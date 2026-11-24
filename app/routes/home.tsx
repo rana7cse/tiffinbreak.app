@@ -99,7 +99,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { writer } = loaderData;
   return (
     <>
-      <SiteHeader writer={writer} brandHref="/" />
+      <SiteHeader writer={writer} brandHref={writer ? "/feed" : "/"} />
 
       <section className="tb-board">
         <StarDeco

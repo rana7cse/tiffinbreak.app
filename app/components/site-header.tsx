@@ -25,18 +25,17 @@ export function SiteHeader({
       </a>
       {writer ? (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Logout stays here until the Profile page exists. */}
-          <form method="post" action="/logout">
-            <button className="tb-btn tb-btn--pill" type="submit">
-              {strings.nav.logout}
-            </button>
-          </form>
-          <Avatar
-            name={writer.name}
-            image={writer.image}
-            size="header"
-            variant="pink"
-          />
+          <a className="tb-btn tb-btn--pill" href="/feed">
+            {strings.nav.feed}
+          </a>
+          <a href="/profile" aria-label={strings.nav.myProfile}>
+            <Avatar
+              name={writer.name}
+              image={writer.image}
+              size="header"
+              variant="pink"
+            />
+          </a>
         </div>
       ) : showLogin ? (
         <a className="tb-btn tb-btn--pill" href="/login">
