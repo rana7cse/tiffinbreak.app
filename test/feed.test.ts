@@ -25,6 +25,26 @@ const titlesIn = (html: string) =>
   );
 
 describe("Feed (GET /feed)", () => {
+  it("shows an inline read-more only on truncated excerpts", async () => {
+    await createStory({
+      title: "লম্বা গল্প",
+      body: "টিফিনের পরোটা চুরি যাওয়ার গল্পটা অনেক লম্বা ছিল। ".repeat(10),
+    });
+    await createStory({ title: "ছোট গল্প", body: "ছোট একটা গল্প।" });
+    const { cookie } = await signInAs();
+    const html = await (await get("/feed", cookie)).text();
+    const cards = html
+      .split("<article")
+      .filter((c) => c.includes("tb-story-card__title"));
+    const long = cards.find((c) => c.includes("লম্বা গল্প"));
+    const short = cards.find((c) => c.includes("ছোট গল্প"));
+    expect(long).toContain("…");
+    expect(long).toContain("tb-story-card__more");
+    expect(long).toContain("আরও পড়ুন");
+    expect(short).not.toContain("tb-story-card__more");
+    expect(short).not.toContain("আরও পড়ুন");
+  });
+
   it("is login-walled", async () => {
     const res = await get("/feed");
     expect(res.status).toBe(302);

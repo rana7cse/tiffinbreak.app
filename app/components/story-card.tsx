@@ -72,7 +72,17 @@ export function StoryCard({ story: s }: { story: FeedStory }) {
         </div>
         <a className="tb-story-card__link" href={storyHref}>
           <h3 className="tb-story-card__title">{s.title}</h3>
-          <p className="tb-story-card__excerpt">{s.excerpt}</p>
+          <p className="tb-story-card__excerpt">
+            {s.excerpt}
+            {s.excerpt.endsWith("…") ? (
+              <>
+                {" "}
+                <span className="tb-story-card__more">
+                  {strings.feed.readMore}
+                </span>
+              </>
+            ) : null}
+          </p>
         </a>
         <div className="tb-story-card__actions">
           <div className="tb-story-card__stats">

@@ -252,6 +252,8 @@ img, svg { display: block; }
 .tb-story-card__body { padding: 14px 16px 10px; }
 .tb-story-card__title { margin-top: 12px; font-size: 19px; line-height: 1.45; font-weight: 700; }
 .tb-story-card__excerpt { margin-top: 6px; font-size: 16px; line-height: 1.65; color: var(--tb-muted); }
+.tb-story-card__more { font-weight: 600; color: var(--tb-ink); }
+.tb-story-card__link:hover .tb-story-card__more { text-decoration: underline; }
 .tb-story-card__link { display: block; text-decoration: none; color: var(--tb-ink); }
 .tb-story-card__actions {
   display: flex; align-items: center; justify-content: space-between;

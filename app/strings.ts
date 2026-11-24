@@ -124,6 +124,7 @@ export const strings = {
     writeFirst: "প্রথম গল্পটা লিখি",
     loadOlder: "আরও পুরোনো গল্প",
     share: "শেয়ার",
+    readMore: "আরও পড়ুন",
     time: {
       justNow: "এইমাত্র",
       minutesAgo: (n: string) => `${n} মিনিট আগে`,
